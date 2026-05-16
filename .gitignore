@@ -10,6 +10,7 @@ __pycache__/
 # 模型权重、训练数据和向量库运行态通常体积较大或依赖本机环境，不纳入版本记录。
 data/raw/
 data/processed/
+Garbage Classification (12 classes).zip
 models/*.pt
 models/*.pth
 models/*.onnx

@@ -1,6 +1,6 @@
 #!/bin/bash
 # 基于深度学习的废弃物数据管理系统 ResNet50 训练任务。
-# 当前脚本按远端 Slurm 集群的 gpu 分区准备，适合正式生成论文所需模型指标。
+# 当前脚本按远端 Slurm 集群的 aws GPU 分区准备，适合在本地 gpu 分区资源不足时提交正式训练。
 # 提交方式示例：sbatch scripts/train_resnet50.slurm
 # 如果集群要求显式账号，请把下面的账号行取消注释，并替换为 sacctmgr 中完整显示的 Account。
 #SBATCH --account=gpo-ifv7xx
@@ -8,7 +8,7 @@
 #SBATCH --job-name=waste-resnet50
 #SBATCH --output=outputs/slurm/resnet50_%j.out
 #SBATCH --error=outputs/slurm/resnet50_%j.err
-#SBATCH --partition=gpu
+#SBATCH --partition=aws
 #SBATCH --qos=normal
 #SBATCH --nodes=1
 #SBATCH --ntasks=1

@@ -62,7 +62,7 @@ sbatch scripts/train_resnet50.slurm
 squeue -u "$USER"
 ```
 
-训练日志会写入 `outputs/slurm/`。由于 `data/raw/` 和原始数据压缩包不进入 Git，提交前需要先把四分类图片目录同步到集群项目目录。如果集群提交时报账号错误，请打开 `scripts/train_resnet50.slurm`，把 `#SBATCH --account=gpo-ifv7xx` 改成当前账号可用的完整 Account。
+训练脚本默认使用 `aws` 分区申请 1 张 GPU。训练日志会写入 `outputs/slurm/`。由于 `data/raw/` 和原始数据压缩包不进入 Git，提交前需要先把四分类图片目录同步到集群项目目录。如果集群提交时报账号错误，请打开 `scripts/train_resnet50.slurm`，把 `#SBATCH --account=gpo-ifv7xx` 改成当前账号可用的完整 Account。
 
 训练完成后会输出模型权重、类别映射和测试指标。若模型文件不存在，系统会返回明确的模型未就绪错误，不会用假结果冒充真实识别。
 

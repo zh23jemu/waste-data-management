@@ -2,6 +2,7 @@
 # 基于深度学习的废弃物数据管理系统 ResNet50 训练任务。
 # 当前脚本按远端 Slurm 集群的 aws GPU 分区准备，适合在本地 gpu 分区资源不足时提交正式训练。
 # 提交方式示例：sbatch scripts/train_resnet50.slurm
+# 如需临时改分区，可在提交时使用：sbatch --partition=gpu scripts/train_resnet50.slurm
 # 如果集群要求显式账号，请把下面的账号行取消注释，并替换为 sacctmgr 中完整显示的 Account。
 #SBATCH --account=gpo-ifv7xx
 
@@ -24,6 +25,9 @@ cd "${SLURM_SUBMIT_DIR}"
 
 # 日志目录属于运行产物，已由 .gitignore 中的 outputs/ 规则忽略。
 mkdir -p outputs/slurm
+
+# 记录 Slurm 分配到的实际分区，方便后续检查是否按预期使用 aws/gpu/defq 等分区。
+echo "训练任务分区：${SLURM_JOB_PARTITION:-未知}"
 
 # 优先使用 Linux 集群常见的 .venv/bin/python；若脚本在兼容 Bash 的 Windows 环境中演练，
 # 则回退到 .venv/Scripts/python.exe，始终避免使用系统 Python。

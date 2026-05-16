@@ -1,0 +1,23 @@
+* { box-sizing: border-box; }
+body { margin: 0; font-family: "Microsoft YaHei", "Segoe UI", sans-serif; color: #1f2933; background: #f4f7f6; }
+.topbar { padding: 28px clamp(18px, 4vw, 48px); background: #103c3a; color: #fff; }
+.topbar h1 { margin: 0 0 8px; font-size: clamp(24px, 4vw, 38px); letter-spacing: 0; }
+.topbar p { margin: 0; max-width: 980px; color: #d9eeea; line-height: 1.7; }
+.layout { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 18px; padding: 22px clamp(14px, 3vw, 42px) 42px; }
+.panel { background: #fff; border: 1px solid #dfe7e3; border-radius: 8px; padding: 18px; box-shadow: 0 8px 24px rgba(16, 60, 58, 0.06); }
+.panel.wide { grid-column: 1 / -1; }
+.panel h2 { margin: 0 0 14px; font-size: 20px; color: #103c3a; }
+.form-row { display: flex; gap: 10px; align-items: center; flex-wrap: wrap; }
+.form-row.compact { margin-bottom: 12px; }
+input[type="file"], input[type="search"], textarea { flex: 1 1 240px; min-width: 0; border: 1px solid #bdcbc6; border-radius: 6px; padding: 10px 12px; font: inherit; background: #fbfdfc; }
+textarea { width: 100%; min-height: 96px; resize: vertical; margin-bottom: 10px; }
+button { border: 0; border-radius: 6px; padding: 10px 14px; font: inherit; color: #fff; background: #167c6b; cursor: pointer; }
+button.secondary { background: #6b7280; }
+button:hover { filter: brightness(0.95); }
+.result-box { margin: 14px 0 0; min-height: 92px; max-height: 280px; overflow: auto; white-space: pre-wrap; word-break: break-word; background: #f6faf8; border: 1px solid #dce8e3; border-radius: 6px; padding: 12px; line-height: 1.6; }
+.chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 10px; }
+.chip { background: #e5f3ef; color: #106050; padding: 6px 10px; border-radius: 999px; cursor: pointer; }
+.history-card, .quiz-card { border: 1px solid #e1e8e4; border-radius: 6px; padding: 12px; margin-bottom: 10px; background: #fbfdfc; }
+.quiz-options { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 8px; }
+.quiz-options label { display: inline-flex; align-items: center; gap: 4px; }
+@media (max-width: 860px) { .layout { grid-template-columns: 1fr; } .panel.wide { grid-column: auto; } button { width: 100%; } }

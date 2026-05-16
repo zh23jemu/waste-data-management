@@ -1,0 +1,76 @@
+<!doctype html>
+<html lang="zh-CN">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>废弃物数据管理系统</title>
+  <link rel="stylesheet" href="/styles.css">
+</head>
+<body>
+  <header class="topbar">
+    <div>
+      <h1>基于深度学习的废弃物数据管理系统</h1>
+      <p>图像识别、相似检索、知识查询、智能问答、图片理解、历史记录与知识测试一体化演示平台</p>
+    </div>
+  </header>
+  <main class="layout">
+    <section class="panel upload-panel">
+      <h2>图像识别</h2>
+      <form id="recognizeForm" class="form-row">
+        <input type="file" name="image" accept="image/png,image/jpeg" required>
+        <button type="submit">上传识别</button>
+      </form>
+      <pre id="recognizeResult" class="result-box">等待上传图片。</pre>
+    </section>
+    <section class="panel">
+      <h2>相似搜索</h2>
+      <form id="similarForm" class="form-row">
+        <input type="file" name="image" accept="image/png,image/jpeg" required>
+        <button type="submit">检索相似案例</button>
+      </form>
+      <pre id="similarResult" class="result-box">需要 Qdrant 服务和已训练模型。</pre>
+    </section>
+    <section class="panel">
+      <h2>文字检索</h2>
+      <div class="form-row">
+        <input id="searchInput" type="search" placeholder="例如：电池、塑料瓶、果皮">
+        <button id="searchBtn" type="button">搜索</button>
+      </div>
+      <div id="hotKeywords" class="chips"></div>
+      <pre id="searchResult" class="result-box">输入关键词查看分类指南。</pre>
+    </section>
+    <section class="panel">
+      <h2>智能交流</h2>
+      <textarea id="chatQuestion" placeholder="例如：过期药品属于什么垃圾？"></textarea>
+      <button id="chatBtn" type="button">调用 DeepSeek 回答</button>
+      <pre id="chatResult" class="result-box">需要配置 DEEPSEEK_API_KEY。</pre>
+    </section>
+    <section class="panel">
+      <h2>图片理解</h2>
+      <form id="understandForm" class="form-row">
+        <input type="file" name="image" accept="image/png,image/jpeg" required>
+        <button type="submit">调用星火分析</button>
+      </form>
+      <pre id="understandResult" class="result-box">需要配置星火视觉接口参数。</pre>
+    </section>
+    <section class="panel">
+      <h2>历史记录</h2>
+      <div class="form-row compact">
+        <button id="loadHistoryBtn" type="button">刷新历史</button>
+        <button id="clearHistoryBtn" type="button" class="secondary">清空历史</button>
+      </div>
+      <div id="historyList" class="history-list"></div>
+    </section>
+    <section class="panel wide">
+      <h2>知识测试</h2>
+      <div class="form-row compact">
+        <button id="loadQuizBtn" type="button">随机抽题</button>
+        <button id="submitQuizBtn" type="button">提交答案</button>
+      </div>
+      <div id="quizList" class="quiz-list"></div>
+      <pre id="quizResult" class="result-box">题库不少于 20 道。</pre>
+    </section>
+  </main>
+  <script src="/app.js"></script>
+</body>
+</html>

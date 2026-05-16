@@ -1,0 +1,9 @@
+Flask>=3.0,<4
+python-dotenv>=1.0,<2
+requests>=2.31,<3
+Pillow>=10.0,<12
+qdrant-client>=1.9,<2
+torch>=2.2
+torchvision>=0.17
+scikit-learn>=1.4,<2
+pytest>=8.0,<9

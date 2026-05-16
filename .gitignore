@@ -1,0 +1,25 @@
+# Python 本地虚拟环境和缓存目录只用于本机开发，不应进入项目版本记录。
+.venv/
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# 模型权重、训练数据和向量库运行态通常体积较大或依赖本机环境，不纳入版本记录。
+data/raw/
+data/processed/
+models/*.pt
+models/*.pth
+models/*.onnx
+outputs/
+uploads/
+instance/
+
+# 本地环境变量、日志和系统生成文件通常包含机器相关信息或临时内容。
+.env
+.env.*
+!.env.example
+*.log
+Thumbs.db
+.DS_Store

@@ -25,3 +25,4 @@ instance/
 *.log
 Thumbs.db
 .DS_Store
+wget-log*

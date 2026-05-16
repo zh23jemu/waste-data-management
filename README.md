@@ -52,6 +52,18 @@ data/raw/other
 .venv\Scripts\python.exe scripts\train_resnet50.py --data-dir data/raw --output-dir models --epochs 10
 ```
 
+远端 Slurm 集群有 GPU 时，建议提交 GPU 训练任务：
+
+```bash
+python3.11 -m venv .venv
+.venv/bin/pip install -r requirements.txt
+.venv/bin/python scripts/check_dataset.py --data-dir data/raw --min-per-class 1
+sbatch scripts/train_resnet50.slurm
+squeue -u "$USER"
+```
+
+训练日志会写入 `outputs/slurm/`。由于 `data/raw/` 和原始数据压缩包不进入 Git，提交前需要先把四分类图片目录同步到集群项目目录。如果集群提交时报账号错误，请打开 `scripts/train_resnet50.slurm`，把 `#SBATCH --account=gpo-ifv7xx` 改成当前账号可用的完整 Account。
+
 训练完成后会输出模型权重、类别映射和测试指标。若模型文件不存在，系统会返回明确的模型未就绪错误，不会用假结果冒充真实识别。
 
 ## 文档
@@ -73,4 +85,4 @@ data/raw/other
 
 当前仓库已经具备可运行 Flask 原型、训练脚本、Qdrant 建索引脚本和论文 Markdown 初稿。真实模型准确率、Qdrant 千级向量检索性能、DeepSeek/星火真实调用结果，需要在补齐数据集和 `.env` 密钥后进一步验证，不能用模拟结果替代。
 
-截至当前检查，`data/raw/recyclable`、`data/raw/hazardous`、`data/raw/kitchen`、`data/raw/other` 四个目录已存在，但尚未放入真实图片样本。因此下一步应先整理公开数据集，再运行数据集检查、模型训练和 Qdrant 建索引流程。
+截至当前检查，Garbage Classification 12 类数据集已整理成四分类训练目录，合计 8213 张图片：`recyclable` 5586 张、`hazardous` 945 张、`kitchen` 985 张、`other` 697 张。下一步应优先使用 GPU 完成 ResNet50 训练，再构建 Qdrant 相似搜索索引。

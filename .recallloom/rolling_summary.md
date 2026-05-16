@@ -1,6 +1,6 @@
 <!-- recallloom:file=rolling_summary version=1.0 lang=zh-CN -->
 <!-- last-writer: [Codex] | 2026-05-16 -->
-<!-- file-state: revision=7 | updated-at=2026-05-16T19:38:39+08:00 | writer-id=Codex | base-workspace-revision=12 -->
+<!-- file-state: revision=8 | updated-at=2026-05-16T19:47:16+08:00 | writer-id=Codex | base-workspace-revision=14 -->
 
 <!-- section: current_state -->
 # 当前状态
@@ -30,7 +30,7 @@
 <!-- section: next_step -->
 # 下一步
 
-下一步优先运行 scripts/train_resnet50.py 生成 models/resnet50_waste.pt、models/class_map.json、training_metrics.json 和 classification_report.txt；训练完成后启动 Qdrant 并运行 scripts/build_qdrant_index.py --image-dir data/raw --recreate；在本地 .env 配置 DeepSeek/星火密钥后实际验证接口。
+下一步优先在远端 Slurm GPU 集群提交 scripts/train_resnet50.slurm 训练任务，生成 models/resnet50_waste.pt、models/class_map.json、training_metrics.json 和 classification_report.txt；集群端需重新创建 Linux .venv 并同步 data/raw 四分类图片目录。训练完成后启动 Qdrant 并运行 scripts/build_qdrant_index.py --image-dir data/raw --recreate；在本地 .env 配置 DeepSeek/星火密钥后实际验证接口。
 
 完成真实训练和接口验证后，应把模型准确率、分类报告、相似检索耗时、API 调用截图或返回示例补入 docs/毕业设计说明书.md 的系统测试章节，并再转为 DOCX 进行版式检查。
 

@@ -1,18 +1,21 @@
 #!/bin/bash
 # 基于深度学习的废弃物数据管理系统 ResNet50 训练任务。
-# 使用前请根据学校或实验室集群实际情况调整分区、GPU 型号、时间和内存。
+# 当前脚本按远端 Slurm 集群的 gpu 分区准备，适合正式生成论文所需模型指标。
 # 提交方式示例：sbatch scripts/train_resnet50.slurm
+# 如果集群要求显式账号，请把下面的账号行取消注释，并替换为 sacctmgr 中完整显示的 Account。
+#SBATCH --account=gpo-ifv7xx
 
 #SBATCH --job-name=waste-resnet50
 #SBATCH --output=outputs/slurm/resnet50_%j.out
 #SBATCH --error=outputs/slurm/resnet50_%j.err
 #SBATCH --partition=gpu
+#SBATCH --qos=normal
 #SBATCH --nodes=1
 #SBATCH --ntasks=1
-#SBATCH --cpus-per-task=4
-#SBATCH --mem=16G
+#SBATCH --cpus-per-task=8
+#SBATCH --mem=32G
 #SBATCH --gres=gpu:1
-#SBATCH --time=04:00:00
+#SBATCH --time=12:00:00
 
 set -euo pipefail
 
@@ -33,8 +36,18 @@ else
   exit 1
 fi
 
+# 输出运行环境信息，方便训练结束后在日志中确认是否真正使用了 GPU。
+"${PYTHON_BIN}" - <<'PY'
+import torch
+
+print(f"CUDA 可用：{torch.cuda.is_available()}")
+print(f"CUDA 设备数量：{torch.cuda.device_count()}")
+if torch.cuda.is_available():
+    print(f"CUDA 设备名称：{torch.cuda.get_device_name(0)}")
+PY
+
 # 训练前先做轻量数据检查，避免空数据集占用集群资源。
 "${PYTHON_BIN}" scripts/check_dataset.py --data-dir data/raw --min-per-class 1
 
 # 使用项目本地虚拟环境运行训练脚本，训练结果写入 models/ 目录。
-"${PYTHON_BIN}" scripts/train_resnet50.py --data-dir data/raw --output-dir models --epochs 10 --batch-size 16
+"${PYTHON_BIN}" scripts/train_resnet50.py --data-dir data/raw --output-dir models --epochs 10 --batch-size 32

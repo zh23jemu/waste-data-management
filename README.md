@@ -51,3 +51,18 @@ data/raw/other
 ## 文档
 
 毕业设计说明书 Markdown 初稿位于 `docs/毕业设计说明书.md`，内容按任务书七个模块和技术指标组织。
+
+
+## 相似搜索索引
+
+训练模型生成 `models/resnet50_waste.pt` 和 `models/class_map.json` 后，启动 Qdrant 服务，并执行：
+
+```powershell
+.venv\Scripts\python.exe scripts\build_qdrant_index.py --image-dir data/raw --recreate
+```
+
+该脚本会扫描四分类图片目录，提取 ResNet50 深度特征，并写入 `waste_images` 集合。相似搜索接口默认只展示相似度大于 `0.65` 的结果。
+
+## 当前状态说明
+
+当前仓库已经具备可运行 Flask 原型、训练脚本、Qdrant 建索引脚本和论文 Markdown 初稿。真实模型准确率、Qdrant 千级向量检索性能、DeepSeek/星火真实调用结果，需要在补齐数据集和 `.env` 密钥后进一步验证，不能用模拟结果替代。

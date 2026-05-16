@@ -4,6 +4,8 @@ import argparse
 import json
 from pathlib import Path
 
+from sklearn.metrics import classification_report
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="微调 ResNet50 垃圾四分类模型")
@@ -65,17 +67,25 @@ def main() -> None:
     optimizer = optim.Adam(model.fc.parameters(), lr=args.lr)
     logs = []
 
-    def evaluate(loader: DataLoader) -> float:
+    def evaluate(loader: DataLoader) -> tuple[float, list[int], list[int]]:
+        """评估模型并返回准确率、真实标签和预测标签。
+
+        真实标签与预测标签会用于生成分类报告，方便后续直接写入论文“系统测试”章节。
+        """
         model.eval()
         correct = 0
         count = 0
+        all_labels: list[int] = []
+        all_preds: list[int] = []
         with torch.no_grad():
             for images, labels in loader:
                 images, labels = images.to(device), labels.to(device)
                 preds = model(images).argmax(dim=1)
                 correct += int((preds == labels).sum().item())
                 count += int(labels.numel())
-        return correct / count if count else 0.0
+                all_labels.extend(labels.cpu().tolist())
+                all_preds.extend(preds.cpu().tolist())
+        return (correct / count if count else 0.0), all_labels, all_preds
 
     for epoch in range(1, args.epochs + 1):
         model.train()
@@ -87,17 +97,22 @@ def main() -> None:
             loss.backward()
             optimizer.step()
             running_loss += float(loss.item())
-        val_acc = evaluate(val_loader)
+        val_acc, _, _ = evaluate(val_loader)
         logs.append({"epoch": epoch, "loss": running_loss / max(len(train_loader), 1), "val_accuracy": val_acc})
         print(f"epoch={epoch} loss={logs[-1]['loss']:.4f} val_acc={val_acc:.4f}")
 
-    test_acc = evaluate(test_loader)
+    test_acc, test_labels, test_preds = evaluate(test_loader)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     torch.save({"model_state_dict": model.state_dict(), "classes": dataset.classes}, args.output_dir / "resnet50_waste.pt")
     class_map = {str(index): name for index, name in enumerate(dataset.classes)}
     (args.output_dir / "class_map.json").write_text(json.dumps(class_map, ensure_ascii=False, indent=2), encoding="utf-8")
-    metrics = {"classes": dataset.classes, "epochs": args.epochs, "test_accuracy": test_acc, "logs": logs}
+    report = classification_report(test_labels, test_preds, target_names=dataset.classes, output_dict=True, zero_division=0)
+    metrics = {"classes": dataset.classes, "epochs": args.epochs, "test_accuracy": test_acc, "logs": logs, "classification_report": report}
     (args.output_dir / "training_metrics.json").write_text(json.dumps(metrics, ensure_ascii=False, indent=2), encoding="utf-8")
+    (args.output_dir / "classification_report.txt").write_text(
+        classification_report(test_labels, test_preds, target_names=dataset.classes, zero_division=0),
+        encoding="utf-8",
+    )
     print(f"测试集准确率：{test_acc:.4f}")
 
 

@@ -5,6 +5,7 @@ import uuid
 from pathlib import Path
 
 from flask import Blueprint, current_app, jsonify, request
+from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
 from .knowledge import HOT_KEYWORDS, QUESTIONS, search_knowledge
@@ -77,6 +78,9 @@ def recognize():
         return jsonify({"ok": True, "data": result})
     except ModelNotReadyError as exc:
         return error_response(str(exc), 503)
+    except RequestEntityTooLarge:
+        max_mb = current_app.config["MAX_CONTENT_LENGTH"] // 1024 // 1024
+        return error_response(f"上传文件不能超过 {max_mb}MB。", 413)
     except ValueError as exc:
         return error_response(str(exc), 400)
     except Exception as exc:
@@ -97,6 +101,9 @@ def similar_search():
         return jsonify({"ok": True, "data": service.search(image_path)})
     except (ModelNotReadyError, SimilaritySearchError) as exc:
         return error_response(str(exc), 503)
+    except RequestEntityTooLarge:
+        max_mb = current_app.config["MAX_CONTENT_LENGTH"] // 1024 // 1024
+        return error_response(f"上传文件不能超过 {max_mb}MB。", 413)
     except ValueError as exc:
         return error_response(str(exc), 400)
     except Exception as exc:
@@ -141,6 +148,9 @@ def image_understanding():
         return jsonify({"ok": True, "data": {"answer": answer}})
     except ExternalApiError as exc:
         return error_response(str(exc), 503)
+    except RequestEntityTooLarge:
+        max_mb = current_app.config["MAX_CONTENT_LENGTH"] // 1024 // 1024
+        return error_response(f"上传文件不能超过 {max_mb}MB。", 413)
     except ValueError as exc:
         return error_response(str(exc), 400)
 

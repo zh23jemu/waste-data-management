@@ -40,6 +40,12 @@ data/raw/kitchen
 data/raw/other
 ```
 
+训练前建议先检查四个类别目录是否已有图片：
+
+```powershell
+.venv\Scripts\python.exe scripts\check_dataset.py --data-dir data/raw --min-per-class 1
+```
+
 执行训练：
 
 ```powershell
@@ -66,3 +72,5 @@ data/raw/other
 ## 当前状态说明
 
 当前仓库已经具备可运行 Flask 原型、训练脚本、Qdrant 建索引脚本和论文 Markdown 初稿。真实模型准确率、Qdrant 千级向量检索性能、DeepSeek/星火真实调用结果，需要在补齐数据集和 `.env` 密钥后进一步验证，不能用模拟结果替代。
+
+截至当前检查，`data/raw/recyclable`、`data/raw/hazardous`、`data/raw/kitchen`、`data/raw/other` 四个目录已存在，但尚未放入真实图片样本。因此下一步应先整理公开数据集，再运行数据集检查、模型训练和 Qdrant 建索引流程。

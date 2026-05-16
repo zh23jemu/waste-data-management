@@ -6,6 +6,9 @@ from pathlib import Path
 
 from sklearn.metrics import classification_report
 
+IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".bmp", ".webp"}
+REQUIRED_CLASSES = ["hazardous", "kitchen", "other", "recyclable"]
+
 
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="微调 ResNet50 垃圾四分类模型")
@@ -17,6 +20,51 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def count_class_images(data_dir: Path) -> dict[str, int]:
+    """统计四分类目录中的有效图片数量。
+
+    训练脚本只把常见图片扩展名计入样本数，避免空目录、说明文本或临时文件被误当成可训练数据。
+    返回值以类别英文目录名为键，方便同时用于命令行提示和后续训练前置校验。
+    """
+    counts: dict[str, int] = {}
+    for class_name in REQUIRED_CLASSES:
+        class_dir = data_dir / class_name
+        counts[class_name] = sum(
+            1 for path in class_dir.rglob("*") if path.is_file() and path.suffix.lower() in IMAGE_EXTENSIONS
+        )
+    return counts
+
+
+def validate_dataset(data_dir: Path) -> None:
+    """在加载深度学习依赖前检查数据集是否满足基本训练条件。
+
+    当前项目需要四大类垃圾分类，因此每个类别目录都必须存在且至少包含图片样本。
+    这里提前给出中文错误信息，可以避免 torchvision 在空数据集上抛出不直观的底层异常。
+    """
+    if not data_dir.exists():
+        raise SystemExit(f"数据目录不存在：{data_dir}。请按 data/raw/recyclable 等四类目录整理公开数据集。")
+
+    missing = [name for name in REQUIRED_CLASSES if not (data_dir / name).exists()]
+    if missing:
+        raise SystemExit(f"缺少类别目录：{', '.join(missing)}。")
+
+    counts = count_class_images(data_dir)
+    empty_classes = [name for name, count in counts.items() if count == 0]
+    if empty_classes:
+        detail = "，".join(f"{name}={counts[name]}" for name in REQUIRED_CLASSES)
+        raise SystemExit(
+            "数据集尚未就绪：以下类别目录没有有效图片："
+            f"{', '.join(empty_classes)}。当前统计：{detail}。"
+        )
+
+    total = sum(counts.values())
+    if total < 8:
+        raise SystemExit(
+            f"数据集样本过少：当前共 {total} 张图片。"
+            "建议每类至少准备多张样本后再训练，以保证训练/验证/测试划分有效。"
+        )
+
+
 def main() -> None:
     """训练入口。
 
@@ -24,6 +72,7 @@ def main() -> None:
     这样既能降低本地算力要求，又能形成可复现实验记录。
     """
     args = parse_args()
+    validate_dataset(args.data_dir)
     try:
         import torch
         from torch import nn, optim
@@ -31,13 +80,6 @@ def main() -> None:
         from torchvision import datasets, models, transforms
     except Exception as exc:
         raise SystemExit(f"训练依赖未安装，请先执行 .venv\\Scripts\\pip.exe install -r requirements.txt：{exc}")
-
-    if not args.data_dir.exists():
-        raise SystemExit(f"数据目录不存在：{args.data_dir}。请按 data/raw/recyclable 等四类目录整理公开数据集。")
-    required = ["hazardous", "kitchen", "other", "recyclable"]
-    missing = [name for name in required if not (args.data_dir / name).exists()]
-    if missing:
-        raise SystemExit(f"缺少类别目录：{', '.join(missing)}。")
 
     transform = transforms.Compose([
         transforms.Resize((224, 224)),
@@ -50,6 +92,11 @@ def main() -> None:
     train_len = int(total * 0.7)
     val_len = int(total * 0.15)
     test_len = total - train_len - val_len
+    if min(train_len, val_len, test_len) == 0:
+        raise SystemExit(
+            f"数据集划分失败：总样本数 {total}，训练/验证/测试分别为 "
+            f"{train_len}/{val_len}/{test_len}。请增加样本数量后再训练。"
+        )
     train_set, val_set, test_set = random_split(dataset, [train_len, val_len, test_len], generator=torch.Generator().manual_seed(42))
 
     train_loader = DataLoader(train_set, batch_size=args.batch_size, shuffle=True)

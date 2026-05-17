@@ -35,7 +35,27 @@ class SimilarityService:
         except Exception as exc:
             raise SimilaritySearchError(f"图片特征提取失败：{exc}") from exc
         try:
-            results = self._client().search(collection_name=self.collection, query_vector=vector, limit=limit)
+            client = self._client()
+            if hasattr(client, "query_points"):
+                # qdrant-client 新版本使用 query_points 接口，返回值会把命中结果放在 points 字段。
+                # 这里显式传入 score_threshold，让服务端先过滤低于阈值的结果，减少后续 Python 端处理。
+                response = client.query_points(
+                    collection_name=self.collection,
+                    query=vector,
+                    limit=limit,
+                    with_payload=True,
+                    score_threshold=self.threshold,
+                )
+                results = response.points
+            else:
+                # 兼容旧版本 qdrant-client，避免部署环境依赖版本较旧时相似检索不可用。
+                results = client.search(
+                    collection_name=self.collection,
+                    query_vector=vector,
+                    limit=limit,
+                    score_threshold=self.threshold,
+                    with_payload=True,
+                )
         except Exception as exc:
             raise SimilaritySearchError(f"Qdrant 检索失败，请确认服务和集合已初始化：{exc}") from exc
 

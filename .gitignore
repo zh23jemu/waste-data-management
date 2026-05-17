@@ -6,6 +6,8 @@ __pycache__/
 .mypy_cache/
 .ruff_cache/
 .codex_tmp/
+.codex_tmp_*
+.recallloom/.tmp_*
 
 # 模型权重、训练数据和向量库运行态通常体积较大或依赖本机环境，不纳入版本记录。
 data/raw/
@@ -15,6 +17,7 @@ models/*.pt
 models/*.pth
 models/*.onnx
 outputs/
+qdrant_storage/
 uploads/
 instance/
 

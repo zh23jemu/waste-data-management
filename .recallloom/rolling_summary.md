@@ -1,6 +1,6 @@
 <!-- recallloom:file=rolling_summary version=1.0 lang=zh-CN -->
 <!-- last-writer: [Codex] | 2026-05-16 -->
-<!-- file-state: revision=9 | updated-at=2026-05-16T21:03:18+08:00 | writer-id=Codex | base-workspace-revision=16 -->
+<!-- file-state: revision=10 | updated-at=2026-05-16T22:31:06+08:00 | writer-id=Codex | base-workspace-revision=19 -->
 
 <!-- section: current_state -->
 # 当前状态
@@ -23,14 +23,14 @@
 <!-- section: risks_open_questions -->
 # 风险与未决问题
 
-当前已从 Garbage Classification (12 classes).zip 整理出可训练四分类图片 8213 张：recyclable 5586 张、hazardous 945 张、kitchen 985 张、other 697 张；clothes 5325 张和 shoes 1977 张因国内四分类口径不稳定已暂时跳过。当前仍没有训练得到的模型权重、没有真实 Qdrant 千级向量索引、没有 DeepSeek 与星火真实密钥验证结果。因此不能声称模型准确率达到 90%，也不能声称相似检索耗时和真实大模型调用已经通过验收。
+当前已从 Garbage Classification (12 classes).zip 整理出可训练四分类图片 8213 张：recyclable 5586 张、hazardous 945 张、kitchen 985 张、other 697 张；clothes 5325 张和 shoes 1977 张因国内四分类口径不稳定已暂时跳过。远端 Slurm aws 分区 L40S GPU 已完成 ResNet50 训练 10 轮，验证准确率最高 0.9821，测试集准确率 0.9830。当前仍没有真实 Qdrant 千级向量索引、没有 DeepSeek 与星火真实调用验证结果，因此相似检索耗时和真实大模型调用仍需补证据。
 
 开题报告已生成渲染 PNG，文本问题已修正，但整体排版仍偏紧；若后续需要提交正式 DOCX，建议继续用 Word 或文档渲染流程检查页面、表格和文字遮挡。
 
 <!-- section: next_step -->
 # 下一步
 
-下一步优先在远端 Slurm GPU 集群的 aws 分区提交 scripts/train_resnet50.slurm 训练任务，生成 models/resnet50_waste.pt、models/class_map.json、training_metrics.json 和 classification_report.txt；集群端需保持 Linux .venv 和 data/raw 四分类图片目录可用。训练完成后启动 Qdrant 并运行 scripts/build_qdrant_index.py --image-dir data/raw --recreate；在本地 .env 配置 DeepSeek/星火密钥后实际验证接口。
+下一步优先把远端训练产物 models/resnet50_waste.pt、models/class_map.json、models/training_metrics.json 和 models/classification_report.txt 同步回本地或保留在远端用于后续流程；随后启动 Qdrant 并运行 scripts/build_qdrant_index.py --image-dir data/raw --recreate；再把模型准确率、分类报告和训练日志补入 docs/毕业设计说明书.md 的系统测试章节。
 
 完成真实训练和接口验证后，应把模型准确率、分类报告、相似检索耗时、API 调用截图或返回示例补入 docs/毕业设计说明书.md 的系统测试章节，并再转为 DOCX 进行版式检查。
 

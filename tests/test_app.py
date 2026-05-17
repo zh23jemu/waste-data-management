@@ -6,6 +6,7 @@ from io import BytesIO
 from waste_app import create_app
 from waste_app.config import Config
 from waste_app.services.history_service import add_history
+from waste_app.services.similarity_service import SimilarityService
 
 
 class TestConfig(Config):
@@ -44,7 +45,11 @@ def test_search_returns_known_item():
 
 
 def test_missing_model_returns_clear_error(tmp_path: Path):
-    app = create_app(TestConfig)
+    class MissingModelConfig(TestConfig):
+        MODEL_PATH = tmp_path / "missing_resnet50_waste.pt"
+        CLASS_MAP_PATH = tmp_path / "missing_class_map.json"
+
+    app = create_app(MissingModelConfig)
     client = app.test_client()
     image = tmp_path / "sample.jpg"
     image.write_bytes(b"not-real-image-but-extension-is-valid")
@@ -152,3 +157,50 @@ def test_history_list_delete_and_clear(tmp_path: Path):
     clear_response = client.delete("/api/history")
     assert clear_response.status_code == 200
     assert clear_response.get_json()["deleted"] == 1
+
+
+def test_similarity_service_supports_qdrant_query_points(monkeypatch, tmp_path: Path):
+    """相似检索服务应兼容新版 qdrant-client 的 query_points 接口。"""
+
+    class FakeClassifier:
+        """用固定特征替代真实 ResNet50，避免单元测试依赖模型权重和深度学习环境。"""
+
+        def extract_feature(self, image_path: Path) -> list[float]:
+            return [0.1, 0.2, 0.3]
+
+    class FakeHit:
+        """模拟 Qdrant 返回的命中结果，只保留业务层实际读取的字段。"""
+
+        def __init__(self, point_id: str, score: float):
+            self.id = point_id
+            self.score = score
+            self.payload = {"image_path": "data/raw/hazardous/battery__battery1.jpg"}
+
+    class FakeResponse:
+        """模拟 query_points 的响应结构，新版客户端命中结果位于 points 字段。"""
+
+        points = [FakeHit("hit-1", 0.92)]
+
+    class FakeClient:
+        """记录调用参数，确认服务端阈值过滤和 payload 返回选项被正确传入。"""
+
+        def query_points(self, **kwargs):
+            assert kwargs["collection_name"] == "waste_images"
+            assert kwargs["query"] == [0.1, 0.2, 0.3]
+            assert kwargs["limit"] == 5
+            assert kwargs["with_payload"] is True
+            assert kwargs["score_threshold"] == 0.65
+            return FakeResponse()
+
+    service = SimilarityService(FakeClassifier(), "http://localhost:63330", "waste_images", 0.65)
+    monkeypatch.setattr(service, "_client", lambda: FakeClient())
+
+    results = service.search(tmp_path / "battery.jpg")
+
+    assert results == [
+        {
+            "id": "hit-1",
+            "score": 0.92,
+            "payload": {"image_path": "data/raw/hazardous/battery__battery1.jpg"},
+        }
+    ]

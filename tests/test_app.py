@@ -44,65 +44,6 @@ def test_search_returns_known_item():
     assert any(item["category"] == "hazardous" for item in data["data"])
 
 
-def test_user_register_login_and_me(tmp_path: Path):
-    """用户应能注册、登录，并通过当前用户接口恢复会话状态。"""
-
-    class AuthConfig(TestConfig):
-        DATABASE_PATH = tmp_path / "auth.sqlite3"
-        UPLOAD_FOLDER = tmp_path / "uploads"
-
-    app = create_app(AuthConfig)
-    client = app.test_client()
-
-    register_response = client.post(
-        "/api/auth/register",
-        json={"username": "student1", "email": "student1@example.com", "password": "secret123"},
-    )
-    register_data = register_response.get_json()["data"]["user"]
-    assert register_response.status_code == 200
-    assert register_data["username"] == "student1"
-    assert register_data["role"] == "user"
-    assert "password_hash" not in register_data
-
-    logout_response = client.post("/api/auth/logout")
-    assert logout_response.status_code == 200
-
-    login_response = client.post("/api/auth/login", json={"username": "student1", "password": "secret123"})
-    assert login_response.status_code == 200
-
-    me_response = client.get("/api/auth/me")
-    assert me_response.status_code == 200
-    assert me_response.get_json()["data"]["user"]["username"] == "student1"
-
-
-def test_admin_can_manage_users(tmp_path: Path):
-    """默认管理员应能查看用户列表并禁用普通用户。"""
-
-    class AuthConfig(TestConfig):
-        DATABASE_PATH = tmp_path / "admin.sqlite3"
-        UPLOAD_FOLDER = tmp_path / "uploads"
-
-    app = create_app(AuthConfig)
-    client = app.test_client()
-
-    client.post(
-        "/api/auth/register",
-        json={"username": "normal_user", "email": "normal@example.com", "password": "secret123"},
-    )
-    client.post("/api/auth/logout")
-    login_response = client.post("/api/auth/login", json={"username": "admin", "password": "admin123456"})
-    assert login_response.status_code == 200
-
-    users_response = client.get("/api/users")
-    users = users_response.get_json()["data"]
-    normal_user = next(item for item in users if item["username"] == "normal_user")
-    assert users_response.status_code == 200
-
-    status_response = client.patch(f"/api/users/{normal_user['id']}/status", json={"status": "disabled"})
-    assert status_response.status_code == 200
-    assert status_response.get_json()["data"]["status"] == "disabled"
-
-
 def test_missing_model_returns_clear_error(tmp_path: Path):
     class MissingModelConfig(TestConfig):
         MODEL_PATH = tmp_path / "missing_resnet50_waste.pt"

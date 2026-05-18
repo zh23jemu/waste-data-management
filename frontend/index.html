@@ -17,9 +17,6 @@
         <button v-for="item in navItems" :key="item.id" type="button" :class="{ active: currentView === item.id }" @click="switchView(item.id)">
           <span>{{ item.icon }}</span>{{ item.label }}
         </button>
-        <button v-if="isAdmin" type="button" :class="{ active: currentView === 'users' }" @click="switchView('users')">
-          <span>人</span>用户管理
-        </button>
       </nav>
       <div class="sidebar-foot">
         <span>Qdrant</span>
@@ -33,11 +30,7 @@
           <p>{{ currentSectionMeta.eyebrow }}</p>
           <h1>{{ currentSectionMeta.title }}</h1>
         </div>
-        <div class="user-menu" v-if="currentUser">
-          <span>{{ currentUser.username }}</span>
-          <button type="button" @click="logout">退出</button>
-        </div>
-        <button v-else type="button" class="login-link" @click="switchView('login')">登录</button>
+        <div class="topbar-status">本地演示</div>
       </header>
 
       <main class="page-shell">
@@ -82,28 +75,6 @@
             <button type="button" :class="item.tone" @click="switchView(item.id)">{{ item.action }}</button>
           </article>
         </div>
-      </section>
-
-      <section v-if="currentView === 'login'" class="view">
-        <module-card title="用户登录" tone="blue">
-          <div class="auth-layout">
-            <form class="auth-form" @submit.prevent="login">
-              <h2>登录系统</h2>
-              <label>用户名或邮箱<input v-model.trim="loginForm.username" autocomplete="username" required></label>
-              <label>密码<input v-model="loginForm.password" type="password" autocomplete="current-password" required></label>
-              <button type="submit">登录</button>
-              <p class="form-message">{{ authMessage }}</p>
-              <p class="hint">默认管理员：admin / admin123456</p>
-            </form>
-            <form class="auth-form muted-form" @submit.prevent="register">
-              <h2>注册用户</h2>
-              <label>用户名<input v-model.trim="registerForm.username" autocomplete="username" required></label>
-              <label>邮箱<input v-model.trim="registerForm.email" type="email" autocomplete="email" required></label>
-              <label>密码<input v-model="registerForm.password" type="password" autocomplete="new-password" required></label>
-              <button type="submit" class="green">注册并登录</button>
-            </form>
-          </div>
-        </module-card>
       </section>
 
       <section v-if="currentView === 'recognize'" class="view">
@@ -231,37 +202,6 @@
         </module-card>
       </section>
 
-      <section v-if="currentView === 'users'" class="view">
-        <module-card title="用户管理" tone="gray">
-          <div class="toolbar">
-            <button type="button" @click="loadUsers">刷新用户</button>
-            <span class="toolbar-note">仅管理员可访问</span>
-          </div>
-          <div class="table-wrap">
-            <table>
-              <thead><tr><th>ID</th><th>用户名</th><th>邮箱</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead>
-              <tbody>
-                <tr v-for="item in users" :key="item.id">
-                  <td>{{ item.id }}</td>
-                  <td>{{ item.username }}</td>
-                  <td>{{ item.email }}</td>
-                  <td>{{ item.role === 'admin' ? '管理员' : '用户' }}</td>
-                  <td><span class="status-pill" :class="item.status">{{ item.status === 'active' ? '正常' : '禁用' }}</span></td>
-                  <td>{{ item.created_at }}</td>
-                  <td>
-                    <button v-if="item.role !== 'admin'" type="button" class="gray" @click="toggleUserStatus(item)">
-                      {{ item.status === 'active' ? '禁用' : '启用' }}
-                    </button>
-                    <span v-else>-</span>
-                  </td>
-                </tr>
-                <tr v-if="!users.length"><td colspan="7">{{ usersMessage }}</td></tr>
-              </tbody>
-            </table>
-          </div>
-        </module-card>
-      </section>
-
       <section v-if="currentView === 'quiz'" class="view">
         <module-card title="知识测试" tone="yellow">
           <div class="toolbar">
@@ -290,6 +230,6 @@
     </div>
   </div>
   <script src="/vendor/vue.global.prod.js"></script>
-  <script src="/app.js"></script>
+  <script src="/app.js?v=hide-quiz-20260518"></script>
 </body>
 </html>

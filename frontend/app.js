@@ -47,14 +47,7 @@ createApp({
         { id: 'similar', label: '相似检索', icon: '检' },
         { id: 'search', label: '分类知识', icon: '知' },
         { id: 'chat', label: '智能问答', icon: '问' },
-        { id: 'quiz', label: '知识测试', icon: '测' },
       ],
-      currentUser: null,
-      loginForm: { username: '', password: '' },
-      registerForm: { username: '', email: '', password: '' },
-      authMessage: '',
-      users: [],
-      usersMessage: '暂无用户数据。',
       stats: [
         { label: '分类数量', value: '4', tone: 'blue' },
         { label: '参考图片', value: '8213', tone: 'green' },
@@ -91,25 +84,19 @@ createApp({
   },
   mounted() {
     this.switchView(location.hash ? location.hash.slice(1) : 'home');
-    this.loadCurrentUser();
     this.loadConfig();
     this.loadHistory();
   },
   computed: {
-    isAdmin() {
-      return this.currentUser && this.currentUser.role === 'admin';
-    },
     currentSectionMeta() {
       const titleMap = {
         home: ['工作台', '废弃物识别与数据管理'],
-        login: ['账号', '登录与注册'],
         recognize: ['模型推理', '图像识别'],
         similar: ['向量检索', '相似案例'],
         search: ['知识库', '分类知识检索'],
         chat: ['问答', '智能交流'],
         understand: ['视觉接口', '图片理解'],
         history: ['记录', '识别历史'],
-        users: ['管理', '用户管理'],
         quiz: ['学习', '知识测试'],
       };
       const [eyebrow, title] = titleMap[this.currentView] || titleMap.home;
@@ -118,11 +105,10 @@ createApp({
   },
   methods: {
     switchView(id) {
-      this.currentView = id || 'home';
+      const allowedViews = new Set(['home', 'recognize', 'similar', 'search', 'chat', 'understand', 'history']);
+      this.currentView = allowedViews.has(id) ? id : 'home';
       history.replaceState(null, '', `#${this.currentView}`);
       if (this.currentView === 'history') this.loadHistory();
-      if (this.currentView === 'quiz' && !this.quizItems.length) this.loadQuiz();
-      if (this.currentView === 'users') this.loadUsers();
       this.$nextTick(() => window.scrollTo({ top: 0, behavior: 'auto' }));
     },
     labelOf(name) {
@@ -148,70 +134,6 @@ createApp({
       const formData = new FormData();
       formData.append('image', file);
       return formData;
-    },
-    async loadCurrentUser() {
-      try {
-        const data = await requestJson('/api/auth/me');
-        this.currentUser = data.data.user;
-      } catch (error) {
-        this.currentUser = null;
-      }
-    },
-    async login() {
-      this.authMessage = '正在登录...';
-      try {
-        const data = await requestJson('/api/auth/login', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.loginForm),
-        });
-        this.currentUser = data.data.user;
-        this.authMessage = '';
-        this.switchView('home');
-      } catch (error) {
-        this.authMessage = error.message;
-      }
-    },
-    async register() {
-      this.authMessage = '正在注册...';
-      try {
-        const data = await requestJson('/api/auth/register', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify(this.registerForm),
-        });
-        this.currentUser = data.data.user;
-        this.authMessage = '';
-        this.switchView('home');
-      } catch (error) {
-        this.authMessage = error.message;
-      }
-    },
-    async logout() {
-      await requestJson('/api/auth/logout', { method: 'POST' });
-      this.currentUser = null;
-      this.users = [];
-      this.switchView('home');
-    },
-    async loadUsers() {
-      this.usersMessage = '加载中...';
-      try {
-        const data = await requestJson('/api/users');
-        this.users = data.data;
-        this.usersMessage = this.users.length ? '' : '暂无用户数据。';
-      } catch (error) {
-        this.users = [];
-        this.usersMessage = error.message;
-      }
-    },
-    async toggleUserStatus(user) {
-      const nextStatus = user.status === 'active' ? 'disabled' : 'active';
-      await requestJson(`/api/users/${user.id}/status`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ status: nextStatus }),
-      });
-      this.loadUsers();
     },
     async recognize() {
       this.recognizeLoading = true;

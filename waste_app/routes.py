@@ -4,7 +4,7 @@ import random
 import uuid
 from pathlib import Path
 
-from flask import Blueprint, current_app, jsonify, request
+from flask import Blueprint, current_app, jsonify, request, session
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
@@ -13,6 +13,14 @@ from .services.deepseek_service import ExternalApiError, ask_deepseek
 from .services.history_service import add_history, clear_history, delete_history, list_history
 from .services.model_service import ModelNotReadyError, WasteClassifier
 from .services.similarity_service import SimilaritySearchError, SimilarityService
+from .services.user_service import (
+    UserServiceError,
+    authenticate_user,
+    get_user,
+    list_users,
+    register_user,
+    update_user_status,
+)
 from .services.xunfei_service import analyze_image_with_xunfei
 
 api_bp = Blueprint("api", __name__)
@@ -22,6 +30,28 @@ _classifier_cache: WasteClassifier | None = None
 def error_response(message: str, status: int = 400):
     """统一错误响应格式，前端可直接展示 message。"""
     return jsonify({"ok": False, "message": message}), status
+
+
+def current_user() -> dict | None:
+    """读取当前登录用户；session 中只有用户 ID，用户信息始终从数据库取最新状态。"""
+    user_id = session.get("user_id")
+    if not user_id:
+        return None
+    user = get_user(current_app.config["DATABASE_PATH"], int(user_id))
+    if user is None or user["status"] != "active":
+        session.clear()
+        return None
+    return user
+
+
+def require_admin() -> dict:
+    """校验当前用户是否为管理员，用于用户管理等敏感操作。"""
+    user = current_user()
+    if user is None:
+        raise PermissionError("请先登录。")
+    if user["role"] != "admin":
+        raise PermissionError("需要管理员权限。")
+    return user
 
 
 def allowed_file(filename: str) -> bool:
@@ -54,6 +84,76 @@ def classifier() -> WasteClassifier:
     if _classifier_cache is None:
         _classifier_cache = WasteClassifier(current_app.config["MODEL_PATH"], current_app.config["CLASS_MAP_PATH"])
     return _classifier_cache
+
+
+@api_bp.post("/auth/register")
+def auth_register():
+    """注册普通用户，注册成功后直接登录。"""
+    payload = request.get_json(silent=True) or {}
+    try:
+        user = register_user(
+            current_app.config["DATABASE_PATH"],
+            payload.get("username", ""),
+            payload.get("email", ""),
+            payload.get("password", ""),
+        )
+        session["user_id"] = user["id"]
+        return jsonify({"ok": True, "data": {"user": user}})
+    except UserServiceError as exc:
+        return error_response(str(exc), 400)
+
+
+@api_bp.post("/auth/login")
+def auth_login():
+    """使用用户名/邮箱和密码登录。"""
+    payload = request.get_json(silent=True) or {}
+    try:
+        user = authenticate_user(
+            current_app.config["DATABASE_PATH"],
+            payload.get("username", ""),
+            payload.get("password", ""),
+        )
+        session["user_id"] = user["id"]
+        return jsonify({"ok": True, "data": {"user": user}})
+    except UserServiceError as exc:
+        return error_response(str(exc), 401)
+
+
+@api_bp.post("/auth/logout")
+def auth_logout():
+    """退出当前登录状态。"""
+    session.clear()
+    return jsonify({"ok": True})
+
+
+@api_bp.get("/auth/me")
+def auth_me():
+    """返回当前登录用户；未登录时 user 为 None，方便前端初始化状态。"""
+    return jsonify({"ok": True, "data": {"user": current_user()}})
+
+
+@api_bp.get("/users")
+def users_list():
+    """管理员查看用户列表。"""
+    try:
+        require_admin()
+        return jsonify({"ok": True, "data": list_users(current_app.config["DATABASE_PATH"])})
+    except PermissionError as exc:
+        return error_response(str(exc), 403)
+
+
+@api_bp.patch("/users/<int:user_id>/status")
+def users_status(user_id: int):
+    """管理员启用或禁用用户。"""
+    payload = request.get_json(silent=True) or {}
+    try:
+        require_admin()
+        user = update_user_status(current_app.config["DATABASE_PATH"], user_id, payload.get("status", ""))
+        return jsonify({"ok": True, "data": user})
+    except PermissionError as exc:
+        return error_response(str(exc), 403)
+    except UserServiceError as exc:
+        return error_response(str(exc), 400)
 
 
 @api_bp.get("/config")

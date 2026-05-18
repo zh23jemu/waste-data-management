@@ -3,185 +3,270 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>基于深度学习的废弃物数据管理系统</title>
+  <title>废弃物数据管理系统</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <header class="site-header">
-    <div class="nav-shell">
-      <a class="brand" href="#home" data-view-link="home">♻ 基于深度学习的废弃物数据管理系统</a>
-      <nav class="nav-links" aria-label="主导航">
-        <a href="#home" data-view-link="home">首页</a>
-        <a href="#recognize" data-view-link="recognize">图像识别</a>
-        <a href="#similar" data-view-link="similar">相似搜索</a>
-        <a href="#search" data-view-link="search">智能搜索</a>
-        <a href="#chat" data-view-link="chat">智能问答</a>
-        <a href="#quiz" data-view-link="quiz">知识测试</a>
-      </nav>
-      <div class="user-menu">admin ▾</div>
-    </div>
-  </header>
-
-  <main class="page-shell">
-    <section id="home" class="view active">
-      <div class="hero-panel">
-        <div class="hero-title">♻ 欢迎使用基于深度学习的废弃物数据管理系统</div>
-        <p>基于 ResNet50 深度学习模型，为您提供智能、准确的废弃物识别服务</p>
-        <div class="hero-actions">
-          <button type="button" data-view-link="recognize">立即识别</button>
-          <button type="button" class="outline" data-view-link="similar">相似搜索</button>
+  <div id="app" v-cloak>
+    <header class="site-header">
+      <div class="nav-shell">
+        <button type="button" class="brand" @click="switchView('home')">废弃物数据管理系统</button>
+        <nav class="nav-links" aria-label="主导航">
+          <button v-for="item in navItems" :key="item.id" type="button" :class="{ active: currentView === item.id }" @click="switchView(item.id)">
+            {{ item.label }}
+          </button>
+          <button v-if="isAdmin" type="button" :class="{ active: currentView === 'users' }" @click="switchView('users')">用户管理</button>
+        </nav>
+        <div class="user-menu" v-if="currentUser">
+          <span>{{ currentUser.username }}</span>
+          <button type="button" @click="logout">退出</button>
         </div>
+        <button v-else type="button" class="login-link" @click="switchView('login')">登录</button>
       </div>
+    </header>
 
-      <div class="stats-grid">
-        <article class="stat-card blue"><span>⌘</span><strong>4</strong><p>废弃物类别</p></article>
-        <article class="stat-card green"><span>▣</span><strong>8213</strong><p>参考图片</p></article>
-        <article class="stat-card cyan"><span>◎</span><strong>98.30%</strong><p>测试准确率</p></article>
-      </div>
-
-      <h2 class="section-title">✦ 主要功能</h2>
-      <div class="feature-grid">
-        <article class="feature-card blue-border">
-          <div class="feature-icon blue-text">▣</div>
-          <h3>图像识别</h3>
-          <p>上传废弃物图片，系统自动识别类别并输出置信度、四分类概率和分类依据。</p>
-          <button type="button" data-view-link="recognize">立即使用</button>
-        </article>
-        <article class="feature-card green-border">
-          <div class="feature-icon green-text">⌕</div>
-          <h3>相似搜索</h3>
-          <p>基于 Qdrant 向量数据库搜索相似图片案例，快速查找参考物品和分类依据。</p>
-          <button type="button" class="green" data-view-link="similar">开始搜索</button>
-        </article>
-        <article class="feature-card cyan-border">
-          <div class="feature-icon cyan-text">●</div>
-          <h3>智能问答</h3>
-          <p>集成 DeepSeek 智能问答，为垃圾分类场景中的常见问题提供解释和建议。</p>
-          <button type="button" class="cyan" data-view-link="chat">开始问答</button>
-        </article>
-        <article class="feature-card yellow-border">
-          <div class="feature-icon yellow-text">?</div>
-          <h3>知识测试</h3>
-          <p>内置垃圾分类知识题库，支持随机抽题、提交评分和逐题解析。</p>
-          <button type="button" class="yellow" data-view-link="quiz">进入测试</button>
-        </article>
-        <article class="feature-card red-border">
-          <div class="feature-icon red-text">▤</div>
-          <h3>分类指南</h3>
-          <p>按关键词检索垃圾分类知识条目，快速查看类别、说明和处理建议。</p>
-          <button type="button" class="red" data-view-link="search">查看指南</button>
-        </article>
-        <article class="feature-card gray-border">
-          <div class="feature-icon gray-text">◷</div>
-          <h3>历史记录</h3>
-          <p>查看最近识别记录，支持刷新、删除单条记录和清空历史。</p>
-          <button type="button" class="gray" data-view-link="history">查看记录</button>
-        </article>
-      </div>
-    </section>
-
-    <section id="recognize" class="view">
-      <div class="module-card">
-        <div class="module-title blue-bg">▣ 图像识别</div>
-        <form id="recognizeForm" class="upload-area">
-          <label>选择图片</label>
-          <input type="file" name="image" accept="image/png,image/jpeg" required>
-          <button type="submit">上传并识别</button>
-        </form>
-        <div class="analysis-layout">
-          <div class="image-preview"><img id="recognizePreview" alt="识别图片预览"><span>等待选择图片</span></div>
-          <div id="recognizeResult" class="result-panel">请选择一张 PNG、JPG 或 JPEG 图片。</div>
-        </div>
-      </div>
-    </section>
-
-    <section id="similar" class="view">
-      <div class="module-card">
-        <div class="module-title green-bg">⌕ 相似搜索</div>
-        <form id="similarForm" class="upload-area">
-          <label>上传图片进行相似搜索</label>
-          <input type="file" name="image" accept="image/png,image/jpeg" required>
-          <button type="submit" class="green">搜索相似图片</button>
-        </form>
-        <div class="analysis-layout">
-          <div class="image-preview"><img id="similarPreview" alt="相似搜索图片预览"><span>等待选择图片</span></div>
+    <main class="page-shell">
+      <section v-if="currentView === 'home'" class="view">
+        <div class="hero-panel">
           <div>
-            <div id="similarSummary" class="notice-box">Qdrant 集合 waste_images 已包含 8213 条参考向量。</div>
-            <div id="similarResult" class="similar-grid"></div>
+            <p class="eyebrow">毕业设计原型</p>
+            <h1>废弃物图像识别与数据管理</h1>
+            <p>围绕四分类识别、相似案例检索、知识查询和测试记录，提供一套可演示、可验证的系统界面。</p>
+          </div>
+          <div class="hero-actions">
+            <button type="button" @click="switchView('recognize')">上传识别</button>
+            <button type="button" class="outline" @click="switchView('similar')">相似检索</button>
           </div>
         </div>
-      </div>
-    </section>
 
-    <section id="search" class="view">
-      <div class="module-card">
-        <div class="module-title green-bg">⌕ 智能搜索</div>
-        <div class="tabs"><button class="tab active">文字搜索</button><button class="tab">图像搜索</button></div>
-        <div class="search-row">
-          <input id="searchInput" type="search" placeholder="输入垃圾名称或分类关键词...">
-          <button id="searchBtn" type="button" class="green">搜索</button>
+        <div class="stats-grid">
+          <article v-for="item in stats" :key="item.label" class="stat-card" :class="item.tone">
+            <span>{{ item.value }}</span>
+            <p>{{ item.label }}</p>
+          </article>
         </div>
-        <div id="hotKeywords" class="chips"></div>
-        <h3 class="sub-title">最近搜索</h3>
-        <div id="searchResult" class="knowledge-grid"></div>
-      </div>
-    </section>
 
-    <section id="chat" class="view">
-      <div class="module-card">
-        <div class="module-title cyan-bg">● 智能问答</div>
-        <textarea id="chatQuestion" placeholder="例如：过期药品属于什么垃圾？为什么？"></textarea>
-        <button id="chatBtn" type="button" class="cyan">开始问答</button>
-        <div id="chatResult" class="result-panel">需要配置 DEEPSEEK_API_KEY。</div>
-      </div>
-    </section>
-
-    <section id="understand" class="view">
-      <div class="module-card">
-        <div class="module-title cyan-bg">▣ 图片理解</div>
-        <form id="understandForm" class="upload-area">
-          <label>选择需要理解的图片</label>
-          <input type="file" name="image" accept="image/png,image/jpeg" required>
-          <button type="submit" class="cyan">调用星火分析</button>
-        </form>
-        <div id="understandResult" class="result-panel">需要配置星火视觉接口参数。</div>
-      </div>
-    </section>
-
-    <section id="history" class="view">
-      <div class="module-card">
-        <div class="module-title gray-bg">◷ 历史记录</div>
-        <div class="toolbar">
-          <button id="loadHistoryBtn" type="button">刷新历史</button>
-          <button id="clearHistoryBtn" type="button" class="gray">清空历史</button>
+        <div class="section-heading">
+          <h2>功能入口</h2>
+          <span>按任务书模块组织</span>
         </div>
-        <div class="table-wrap">
-          <table>
-            <thead><tr><th>ID</th><th>图片</th><th>类别</th><th>置信度</th><th>时间</th><th>操作</th></tr></thead>
-            <tbody id="historyList"></tbody>
-          </table>
+        <div class="feature-grid">
+          <article v-for="item in features" :key="item.id" class="feature-card">
+            <div class="feature-meta">
+              <strong>{{ item.title }}</strong>
+              <span>{{ item.tag }}</span>
+            </div>
+            <p>{{ item.desc }}</p>
+            <button type="button" :class="item.tone" @click="switchView(item.id)">{{ item.action }}</button>
+          </article>
         </div>
-      </div>
-    </section>
+      </section>
 
-    <section id="quiz" class="view">
-      <div class="module-card">
-        <div class="module-title yellow-bg">? 知识测试</div>
-        <div class="toolbar">
-          <button id="loadQuizBtn" type="button" class="yellow">随机抽题</button>
-          <button id="submitQuizBtn" type="button">提交答案</button>
-        </div>
-        <div id="quizList" class="quiz-list"></div>
-        <div id="quizResult" class="result-panel compact-panel">题库不少于 20 道。</div>
-      </div>
-    </section>
-  </main>
+      <section v-if="currentView === 'login'" class="view">
+        <module-card title="用户登录" tone="blue">
+          <div class="auth-layout">
+            <form class="auth-form" @submit.prevent="login">
+              <h2>登录系统</h2>
+              <label>用户名或邮箱<input v-model.trim="loginForm.username" autocomplete="username" required></label>
+              <label>密码<input v-model="loginForm.password" type="password" autocomplete="current-password" required></label>
+              <button type="submit">登录</button>
+              <p class="form-message">{{ authMessage }}</p>
+              <p class="hint">默认管理员：admin / admin123456</p>
+            </form>
+            <form class="auth-form muted-form" @submit.prevent="register">
+              <h2>注册用户</h2>
+              <label>用户名<input v-model.trim="registerForm.username" autocomplete="username" required></label>
+              <label>邮箱<input v-model.trim="registerForm.email" type="email" autocomplete="email" required></label>
+              <label>密码<input v-model="registerForm.password" type="password" autocomplete="new-password" required></label>
+              <button type="submit" class="green">注册并登录</button>
+            </form>
+          </div>
+        </module-card>
+      </section>
 
-  <footer class="site-footer">
-    <div><strong>♻ 基于深度学习的废弃物数据管理系统</strong><p>基于深度学习的废弃物数据管理系统解决方案</p></div>
-    <div><strong>快速链接</strong><a href="#recognize" data-view-link="recognize">图像识别</a><a href="#search" data-view-link="search">分类指南</a><a href="#history" data-view-link="history">历史记录</a></div>
-    <div><strong>联系我们</strong><p>contact@example.com</p><p>400-123-4567</p></div>
-  </footer>
+      <section v-if="currentView === 'recognize'" class="view">
+        <module-card title="图像识别" tone="blue">
+          <form class="upload-area" @submit.prevent="recognize">
+            <label>图片文件</label>
+            <input ref="recognizeInput" type="file" accept="image/png,image/jpeg" required @change="previewFile('recognize', $event)">
+            <button type="submit">开始识别</button>
+          </form>
+          <div class="analysis-layout">
+            <image-preview :src="recognizePreview" text="未选择图片"></image-preview>
+            <div class="result-panel">
+              <template v-if="recognizeLoading">正在识别，请稍候...</template>
+              <template v-else-if="recognizeError">{{ recognizeError }}</template>
+              <template v-else-if="recognizeResult">
+                <div class="metric-row">
+                  <div class="metric blue"><strong>{{ labelOf(recognizeResult.predicted_class) }}</strong><span>识别结果</span></div>
+                  <div class="metric green"><strong>{{ percent(recognizeResult.confidence) }}</strong><span>置信度</span></div>
+                  <div class="metric cyan"><strong>#{{ recognizeResult.history_id }}</strong><span>记录编号</span></div>
+                </div>
+                <h3>分类依据</h3>
+                <p>{{ recognizeResult.rationale }}</p>
+                <h3>类别概率</h3>
+                <div class="prob-list">
+                  <div v-for="(value, name) in recognizeResult.probabilities" :key="name" class="prob-item">
+                    <span>{{ labelOf(name) }}</span>
+                    <div class="bar"><i :style="{ width: Math.max(2, value * 100) + '%' }"></i></div>
+                    <strong>{{ percent(value) }}</strong>
+                  </div>
+                </div>
+              </template>
+              <template v-else>请选择 PNG、JPG 或 JPEG 图片。</template>
+            </div>
+          </div>
+        </module-card>
+      </section>
+
+      <section v-if="currentView === 'similar'" class="view">
+        <module-card title="相似检索" tone="green">
+          <form class="upload-area" @submit.prevent="searchSimilar">
+            <label>查询图片</label>
+            <input ref="similarInput" type="file" accept="image/png,image/jpeg" required @change="previewFile('similar', $event)">
+            <button type="submit" class="green">检索</button>
+          </form>
+          <div class="analysis-layout">
+            <image-preview :src="similarPreview" text="未选择图片"></image-preview>
+            <div>
+              <div class="notice-box">{{ similarMessage }}</div>
+              <div class="similar-grid">
+                <article v-for="item in similarResults" :key="item.id" class="similar-card">
+                  <img :src="mediaUrl(item.payload && item.payload.image_path)" :alt="item.payload && item.payload.filename">
+                  <div>
+                    <strong>{{ item.payload && item.payload.filename || '参考图片' }}</strong>
+                    <span>类别：{{ labelOf(item.payload && item.payload.category) }}</span>
+                    <span>相似度：{{ percent(item.score) }}</span>
+                  </div>
+                </article>
+              </div>
+            </div>
+          </div>
+        </module-card>
+      </section>
+
+      <section v-if="currentView === 'search'" class="view">
+        <module-card title="分类知识检索" tone="green">
+          <div class="search-row">
+            <input v-model.trim="keyword" type="search" placeholder="输入物品名称，例如：电池、塑料瓶、果皮">
+            <button type="button" class="green" @click="doSearch">搜索</button>
+          </div>
+          <div class="chips">
+            <button v-for="word in hotKeywords" :key="word" type="button" @click="useKeyword(word)">{{ word }}</button>
+          </div>
+          <div class="knowledge-grid">
+            <article v-for="item in searchResults" :key="item.name" class="knowledge-card">
+              <strong>{{ item.name }}</strong>
+              <span>{{ labelOf(item.category) }}</span>
+              <p>{{ item.description }}</p>
+            </article>
+            <article v-if="searchMessage" class="knowledge-card empty">{{ searchMessage }}</article>
+          </div>
+        </module-card>
+      </section>
+
+      <section v-if="currentView === 'chat'" class="view">
+        <module-card title="智能问答" tone="cyan">
+          <textarea v-model.trim="chatQuestion" placeholder="例如：过期药品属于什么垃圾？"></textarea>
+          <div class="toolbar"><button type="button" class="cyan" @click="askChat">提交问题</button></div>
+          <div class="result-panel compact-panel">{{ chatAnswer }}</div>
+        </module-card>
+      </section>
+
+      <section v-if="currentView === 'understand'" class="view">
+        <module-card title="图片理解" tone="cyan">
+          <form class="upload-area" @submit.prevent="understandImage">
+            <label>图片文件</label>
+            <input ref="understandInput" type="file" accept="image/png,image/jpeg" required>
+            <button type="submit" class="cyan">分析图片</button>
+          </form>
+          <div class="result-panel compact-panel">{{ understandResult }}</div>
+        </module-card>
+      </section>
+
+      <section v-if="currentView === 'history'" class="view">
+        <module-card title="识别历史" tone="gray">
+          <div class="toolbar">
+            <button type="button" @click="loadHistory">刷新</button>
+            <button type="button" class="gray" @click="clearHistory">清空</button>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>图片</th><th>类别</th><th>置信度</th><th>时间</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="item in historyItems" :key="item.id">
+                  <td>{{ item.id }}</td>
+                  <td><img class="thumb" :src="mediaUrl(item.image_path)" alt="历史图片"></td>
+                  <td>{{ labelOf(item.predicted_class) }}</td>
+                  <td>{{ percent(item.confidence) }}</td>
+                  <td>{{ item.created_at }}</td>
+                  <td><button type="button" class="gray" @click="deleteHistory(item.id)">删除</button></td>
+                </tr>
+                <tr v-if="!historyItems.length"><td colspan="6">{{ historyMessage }}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </module-card>
+      </section>
+
+      <section v-if="currentView === 'users'" class="view">
+        <module-card title="用户管理" tone="gray">
+          <div class="toolbar">
+            <button type="button" @click="loadUsers">刷新用户</button>
+            <span class="toolbar-note">仅管理员可访问</span>
+          </div>
+          <div class="table-wrap">
+            <table>
+              <thead><tr><th>ID</th><th>用户名</th><th>邮箱</th><th>角色</th><th>状态</th><th>注册时间</th><th>操作</th></tr></thead>
+              <tbody>
+                <tr v-for="item in users" :key="item.id">
+                  <td>{{ item.id }}</td>
+                  <td>{{ item.username }}</td>
+                  <td>{{ item.email }}</td>
+                  <td>{{ item.role === 'admin' ? '管理员' : '用户' }}</td>
+                  <td><span class="status-pill" :class="item.status">{{ item.status === 'active' ? '正常' : '禁用' }}</span></td>
+                  <td>{{ item.created_at }}</td>
+                  <td>
+                    <button v-if="item.role !== 'admin'" type="button" class="gray" @click="toggleUserStatus(item)">
+                      {{ item.status === 'active' ? '禁用' : '启用' }}
+                    </button>
+                    <span v-else>-</span>
+                  </td>
+                </tr>
+                <tr v-if="!users.length"><td colspan="7">{{ usersMessage }}</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </module-card>
+      </section>
+
+      <section v-if="currentView === 'quiz'" class="view">
+        <module-card title="知识测试" tone="yellow">
+          <div class="toolbar">
+            <button type="button" class="yellow" @click="loadQuiz">随机抽题</button>
+            <button type="button" @click="submitQuiz">提交答案</button>
+          </div>
+          <div class="quiz-list">
+            <article v-for="(item, index) in quizItems" :key="item.id" class="quiz-card">
+              <strong>{{ index + 1 }}. {{ item.question }}</strong>
+              <label v-for="option in item.options" :key="option">
+                <input v-model="quizAnswers[item.id]" type="radio" :name="'q-' + item.id" :value="option">
+                {{ option }}
+              </label>
+            </article>
+          </div>
+          <div class="result-panel compact-panel">{{ quizResult }}</div>
+        </module-card>
+      </section>
+    </main>
+
+    <footer class="site-footer">
+      <div><strong>废弃物数据管理系统</strong><p>用于毕业设计演示与实验记录整理。</p></div>
+      <div><strong>模块</strong><button type="button" @click="switchView('recognize')">图像识别</button><button type="button" @click="switchView('search')">分类指南</button><button type="button" @click="switchView('history')">历史记录</button></div>
+      <div><strong>运行状态</strong><p>模型：ResNet50</p><p>向量库：Qdrant</p></div>
+    </footer>
+  </div>
+  <script src="/vendor/vue.global.prod.js"></script>
   <script src="/app.js"></script>
 </body>
 </html>

@@ -4,6 +4,8 @@ import sqlite3
 from pathlib import Path
 from typing import Any
 
+from werkzeug.security import generate_password_hash
+
 SCHEMA = """
 CREATE TABLE IF NOT EXISTS recognition_history (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -14,6 +16,16 @@ CREATE TABLE IF NOT EXISTS recognition_history (
     rationale TEXT NOT NULL,
     created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
 );
+
+CREATE TABLE IF NOT EXISTS users (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    username TEXT NOT NULL UNIQUE,
+    email TEXT NOT NULL UNIQUE,
+    password_hash TEXT NOT NULL,
+    role TEXT NOT NULL DEFAULT 'user',
+    status TEXT NOT NULL DEFAULT 'active',
+    created_at TEXT NOT NULL DEFAULT (datetime('now', 'localtime'))
+);
 """
 
 
@@ -22,6 +34,17 @@ def init_db(database_path: Path) -> None:
     database_path.parent.mkdir(parents=True, exist_ok=True)
     with sqlite3.connect(database_path) as conn:
         conn.executescript(SCHEMA)
+        # 为本地演示准备一个默认管理员账号。只有 users 表为空时创建，避免覆盖用户修改。
+        # 默认密码仅用于毕业设计本地演示，正式部署时应通过环境变量或管理后台修改。
+        user_count = conn.execute("SELECT COUNT(*) FROM users").fetchone()[0]
+        if user_count == 0:
+            conn.execute(
+                """
+                INSERT INTO users (username, email, password_hash, role, status)
+                VALUES (?, ?, ?, 'admin', 'active')
+                """,
+                ("admin", "admin@example.com", generate_password_hash("admin123456")),
+            )
         conn.commit()
 
 

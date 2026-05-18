@@ -7,35 +7,56 @@
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <div id="app" v-cloak>
-    <header class="site-header">
-      <div class="nav-shell">
-        <button type="button" class="brand" @click="switchView('home')">废弃物数据管理系统</button>
-        <nav class="nav-links" aria-label="主导航">
-          <button v-for="item in navItems" :key="item.id" type="button" :class="{ active: currentView === item.id }" @click="switchView(item.id)">
-            {{ item.label }}
-          </button>
-          <button v-if="isAdmin" type="button" :class="{ active: currentView === 'users' }" @click="switchView('users')">用户管理</button>
-        </nav>
+  <div id="app" class="app-shell" v-cloak>
+    <aside class="sidebar">
+      <button type="button" class="brand" @click="switchView('home')">
+        <span class="brand-mark">W</span>
+        <span><strong>WasteLab</strong><small>废弃物数据管理</small></span>
+      </button>
+      <nav class="nav-links" aria-label="主导航">
+        <button v-for="item in navItems" :key="item.id" type="button" :class="{ active: currentView === item.id }" @click="switchView(item.id)">
+          <span>{{ item.icon }}</span>{{ item.label }}
+        </button>
+        <button v-if="isAdmin" type="button" :class="{ active: currentView === 'users' }" @click="switchView('users')">
+          <span>人</span>用户管理
+        </button>
+      </nav>
+      <div class="sidebar-foot">
+        <span>Qdrant</span>
+        <strong>8213 vectors</strong>
+      </div>
+    </aside>
+
+    <div class="workspace">
+      <header class="topbar">
+        <div>
+          <p>{{ currentSectionMeta.eyebrow }}</p>
+          <h1>{{ currentSectionMeta.title }}</h1>
+        </div>
         <div class="user-menu" v-if="currentUser">
           <span>{{ currentUser.username }}</span>
           <button type="button" @click="logout">退出</button>
         </div>
         <button v-else type="button" class="login-link" @click="switchView('login')">登录</button>
-      </div>
-    </header>
+      </header>
 
-    <main class="page-shell">
+      <main class="page-shell">
       <section v-if="currentView === 'home'" class="view">
         <div class="hero-panel">
           <div>
-            <p class="eyebrow">毕业设计原型</p>
-            <h1>废弃物图像识别与数据管理</h1>
-            <p>围绕四分类识别、相似案例检索、知识查询和测试记录，提供一套可演示、可验证的系统界面。</p>
+            <p class="eyebrow">ResNet50 · Qdrant · Vue</p>
+            <h1>让废弃物图片变成可检索、可解释的数据</h1>
+            <p>面向毕业设计演示的现代化工作台，覆盖图像识别、相似案例、知识查询、账号管理和实验记录。</p>
+            <div class="hero-actions">
+              <button type="button" @click="switchView('recognize')">上传识别</button>
+              <button type="button" class="outline" @click="switchView('similar')">查看相似案例</button>
+            </div>
           </div>
-          <div class="hero-actions">
-            <button type="button" @click="switchView('recognize')">上传识别</button>
-            <button type="button" class="outline" @click="switchView('similar')">相似检索</button>
+          <div class="hero-collage" aria-label="废弃物样例图片">
+            <img src="/assets/recyclable.jpg" alt="可回收物样例">
+            <img src="/assets/hazardous.jpg" alt="有害垃圾样例">
+            <img src="/assets/kitchen.jpg" alt="厨余垃圾样例">
+            <img src="/assets/other.jpg" alt="其他垃圾样例">
           </div>
         </div>
 
@@ -53,8 +74,9 @@
         <div class="feature-grid">
           <article v-for="item in features" :key="item.id" class="feature-card">
             <div class="feature-meta">
+              <span class="feature-icon">{{ item.icon }}</span>
               <strong>{{ item.title }}</strong>
-              <span>{{ item.tag }}</span>
+              <em>{{ item.tag }}</em>
             </div>
             <p>{{ item.desc }}</p>
             <button type="button" :class="item.tone" @click="switchView(item.id)">{{ item.action }}</button>
@@ -258,13 +280,14 @@
           <div class="result-panel compact-panel">{{ quizResult }}</div>
         </module-card>
       </section>
-    </main>
+      </main>
 
-    <footer class="site-footer">
-      <div><strong>废弃物数据管理系统</strong><p>用于毕业设计演示与实验记录整理。</p></div>
-      <div><strong>模块</strong><button type="button" @click="switchView('recognize')">图像识别</button><button type="button" @click="switchView('search')">分类指南</button><button type="button" @click="switchView('history')">历史记录</button></div>
-      <div><strong>运行状态</strong><p>模型：ResNet50</p><p>向量库：Qdrant</p></div>
-    </footer>
+      <footer class="site-footer">
+        <span>模型：ResNet50</span>
+        <span>向量库：Qdrant</span>
+        <span>业务库：SQLite</span>
+      </footer>
+    </div>
   </div>
   <script src="/vendor/vue.global.prod.js"></script>
   <script src="/app.js"></script>

@@ -19,7 +19,7 @@
 
 ## Current Status
 
-当前已经完成四分类数据集整理、ResNet50 远端 Slurm GPU 训练、本地 Qdrant 向量索引构建、相似检索接口验证、Vue 前端改造和用户注册/登录/管理功能。训练数据来自 `Garbage Classification (12 classes).zip`，已整理为可回收物、有害垃圾、厨余垃圾、其他垃圾四类，共 8213 张图片。远端训练结果已经通过 GitHub Release 同步回本地 `models/` 目录，本地包含 `resnet50_waste.pt`、`class_map.json`、`classification_report.txt` 和 `training_metrics.json`。本地 Qdrant 容器使用 `http://localhost:63330` 访问，`waste_images` 集合已写入 8213 条 2048 维图片特征向量。前端已改为 Vue 3 单页应用，保留蓝色顶栏、居中内容区、统计卡、功能入口卡和模块页管理后台风格，文案已收敛为更克制的毕业设计系统表达。
+当前已经完成四分类数据集整理、ResNet50 远端 Slurm GPU 训练、本地 Qdrant 向量索引构建、相似检索接口验证、Vue 前端改造、现代化视觉改版和用户注册/登录/管理功能。训练数据来自 `Garbage Classification (12 classes).zip`，已整理为可回收物、有害垃圾、厨余垃圾、其他垃圾四类，共 8213 张图片。远端训练结果已经通过 GitHub Release 同步回本地 `models/` 目录，本地包含 `resnet50_waste.pt`、`class_map.json`、`classification_report.txt` 和 `training_metrics.json`。本地 Qdrant 容器使用 `http://localhost:63330` 访问，`waste_images` 集合已写入 8213 条 2048 维图片特征向量。前端已改为 Vue 3 单页应用，并进一步调整为深色侧边栏、浅色工作台、玻璃质感顶栏、实拍废弃物样例图和多色统计卡的现代管理后台风格。
 
 ## Recent Changes
 
@@ -29,25 +29,26 @@
 - 已运行 `.venv\Scripts\python.exe scripts\build_qdrant_index.py --image-dir data/raw --qdrant-url http://localhost:63330 --recreate`，完成 `waste_images` 集合索引构建。
 - 已修复 `qdrant-client` 新版兼容问题：相似检索服务优先使用 `query_points()`，并保留旧版 `search()` 兜底。
 - 已用 `battery__battery1.jpg` 验证 `/api/similar-search`：首次请求约 14.01 秒，热启动后两次约 893.19 毫秒和 891.63 毫秒，返回 1 条结果，最高相似度 1.0。
-- 已运行 `.venv\Scripts\python.exe -m pytest -q`，结果为 11 passed。
+- 已运行 `.venv\Scripts\python.exe -m pytest -q`，结果为 13 passed。
 - 已根据 `5c26f2b31b174502601e10d5e79ea072.mp4` 演示视频改造前端界面，覆盖首页、图像识别、相似搜索、智能搜索、智能问答、图片理解、历史记录和知识测试视图。
 - 用户反馈原前端“HTML 写法太老、AI 味太重”后，已将前端改为 Vue 3 驱动的单页应用；为了避免引入 npm 构建流程，当前使用本地 `frontend/vendor/vue.global.prod.js` 运行时。
 - 已新增 `/media/<path>` 安全图片预览路由，只允许读取 `uploads`、`data/raw` 和 `data/processed` 下的图片，用于展示上传图、历史图和相似检索图。
 - 已新增 SQLite `users` 表、默认管理员账号、用户注册/登录/退出/当前用户接口，以及管理员用户列表和启停账号接口；前端新增登录注册页和用户管理页。
+- 已大幅更新前端页面风格和配色：由旧的顶栏式页面改为暗色侧边导航 + 浅色内容区布局，首页加入四类废弃物样例图片拼贴，模块卡片、统计卡、表格、表单和响应式布局同步现代化。
 - `models/resnet50_waste.pt` 为较大的模型权重文件，按 `.gitignore` 规则不纳入普通 Git 提交；分类报告、类别映射和训练指标可作为说明书测试章节证据。
 
 ## Next TODO
 
 - 将模型测试准确率、分类报告、训练环境和关键训练日志补入 `docs/毕业设计说明书.md` 的系统测试章节。
 - 将 Qdrant 索引规模、相似检索耗时和返回示例补入 `docs/毕业设计说明书.md` 的系统测试章节。
-- 继续人工演示检查 Vue 前端在真实上传识别、相似检索和移动端下的视觉细节。
+- 继续人工演示检查 Vue 前端在真实上传识别、相似检索和移动端下的完整交互细节。
 - 如需更严格的权限控制，后续可把识别、历史记录等接口改为必须登录后访问，并按用户隔离历史记录。
 - 补充 DeepSeek/星火真实接口调用结果。
 
 ## Open Issues
 
 - 相似检索接口已验证，但正式说明书还未写入对应测试证据。
-- Vue 前端已通过桌面和移动端截图检查，但真实上传演示和相似检索完整流程仍建议再人工走一遍。
+- Vue 前端现代化改版已通过桌面浏览器截图和静态响应式规则检查，但当前环境未能直接生成移动端浏览器截图，真实手机宽度下仍建议再人工走一遍。
 - 当前用户系统已有登录态和管理员管理能力，但业务数据仍是全局历史记录，尚未按用户隔离。
 - DeepSeek 与星火接口仍待真实密钥环境验证。
 - 正式 DOCX 交付前仍需做版式检查，确认图片、表格和正文不存在遮挡或拥挤。
@@ -57,6 +58,7 @@
 - 训练任务默认使用 Slurm 集群；GPU 任务默认使用 `aws` 分区，CPU 任务默认使用 `defq` 分区，并可通过 `sbatch --partition=目标分区 脚本路径` 覆盖。
 - 模型权重通过 GitHub Release 或外部制品通道同步，不直接进入普通 Git 历史。
 - 用户认证采用 Flask session + SQLite 用户表，密码使用 Werkzeug 哈希存储；默认管理员为 `admin / admin123456`，仅用于本地演示。
+- 前端继续保持无构建工具的 Vue 3 全局运行时方案，优先满足毕业设计演示和本地部署便利性；视觉资产使用数据集样例图，不引入外部图片依赖。
 - 项目连续性状态继续由 RecallLoom 维护，项目入口规则和当前关键状态同步记录在本文件。
 
 <!-- RecallLoom managed bridge start -->

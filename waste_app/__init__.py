@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from flask import Flask, jsonify, send_from_directory
+from pathlib import Path
+
+from flask import Flask, abort, jsonify, send_from_directory
 from werkzeug.exceptions import RequestEntityTooLarge
 
 from .config import Config
@@ -23,6 +25,26 @@ def create_app(config_object: type[Config] = Config) -> Flask:
     def index():
         """返回前端单页应用入口。"""
         return send_from_directory(app.static_folder, "index.html")
+
+    @app.get("/media/<path:relative_path>")
+    def media_file(relative_path: str):
+        """安全返回系统产生或数据集中已有的图片，用于前端预览。
+
+        前端需要展示上传图片、历史记录图片和 Qdrant 返回的相似图片。接口只允许读取
+        uploads、data/raw 和 data/processed 三类项目内目录，避免把任意本地文件暴露给浏览器。
+        """
+        base_dir: Path = app.config["BASE_DIR"]
+        candidate = (base_dir / relative_path).resolve()
+        allowed_roots = [
+            app.config["UPLOAD_FOLDER"].resolve(),
+            (base_dir / "data/raw").resolve(),
+            (base_dir / "data/processed").resolve(),
+        ]
+        if not any(candidate == root or root in candidate.parents for root in allowed_roots):
+            abort(404)
+        if not candidate.is_file():
+            abort(404)
+        return send_from_directory(candidate.parent, candidate.name)
 
     @app.get("/health")
     def health():

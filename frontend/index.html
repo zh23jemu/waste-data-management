@@ -3,74 +3,185 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>废弃物数据管理系统</title>
+  <title>基于深度学习的废弃物数据管理系统</title>
   <link rel="stylesheet" href="/styles.css">
 </head>
 <body>
-  <header class="topbar">
-    <div>
-      <h1>基于深度学习的废弃物数据管理系统</h1>
-      <p>图像识别、相似检索、知识查询、智能问答、图片理解、历史记录与知识测试一体化演示平台</p>
+  <header class="site-header">
+    <div class="nav-shell">
+      <a class="brand" href="#home" data-view-link="home">♻ 基于深度学习的废弃物数据管理系统</a>
+      <nav class="nav-links" aria-label="主导航">
+        <a href="#home" data-view-link="home">首页</a>
+        <a href="#recognize" data-view-link="recognize">图像识别</a>
+        <a href="#similar" data-view-link="similar">相似搜索</a>
+        <a href="#search" data-view-link="search">智能搜索</a>
+        <a href="#chat" data-view-link="chat">智能问答</a>
+        <a href="#quiz" data-view-link="quiz">知识测试</a>
+      </nav>
+      <div class="user-menu">admin ▾</div>
     </div>
   </header>
-  <main class="layout">
-    <section class="panel upload-panel">
-      <h2>图像识别</h2>
-      <form id="recognizeForm" class="form-row">
-        <input type="file" name="image" accept="image/png,image/jpeg" required>
-        <button type="submit">上传识别</button>
-      </form>
-      <pre id="recognizeResult" class="result-box">等待上传图片。</pre>
-    </section>
-    <section class="panel">
-      <h2>相似搜索</h2>
-      <form id="similarForm" class="form-row">
-        <input type="file" name="image" accept="image/png,image/jpeg" required>
-        <button type="submit">检索相似案例</button>
-      </form>
-      <pre id="similarResult" class="result-box">需要 Qdrant 服务和已训练模型。</pre>
-    </section>
-    <section class="panel">
-      <h2>文字检索</h2>
-      <div class="form-row">
-        <input id="searchInput" type="search" placeholder="例如：电池、塑料瓶、果皮">
-        <button id="searchBtn" type="button">搜索</button>
+
+  <main class="page-shell">
+    <section id="home" class="view active">
+      <div class="hero-panel">
+        <div class="hero-title">♻ 欢迎使用基于深度学习的废弃物数据管理系统</div>
+        <p>基于 ResNet50 深度学习模型，为您提供智能、准确的废弃物识别服务</p>
+        <div class="hero-actions">
+          <button type="button" data-view-link="recognize">立即识别</button>
+          <button type="button" class="outline" data-view-link="similar">相似搜索</button>
+        </div>
       </div>
-      <div id="hotKeywords" class="chips"></div>
-      <pre id="searchResult" class="result-box">输入关键词查看分类指南。</pre>
-    </section>
-    <section class="panel">
-      <h2>智能交流</h2>
-      <textarea id="chatQuestion" placeholder="例如：过期药品属于什么垃圾？"></textarea>
-      <button id="chatBtn" type="button">调用 DeepSeek 回答</button>
-      <pre id="chatResult" class="result-box">需要配置 DEEPSEEK_API_KEY。</pre>
-    </section>
-    <section class="panel">
-      <h2>图片理解</h2>
-      <form id="understandForm" class="form-row">
-        <input type="file" name="image" accept="image/png,image/jpeg" required>
-        <button type="submit">调用星火分析</button>
-      </form>
-      <pre id="understandResult" class="result-box">需要配置星火视觉接口参数。</pre>
-    </section>
-    <section class="panel">
-      <h2>历史记录</h2>
-      <div class="form-row compact">
-        <button id="loadHistoryBtn" type="button">刷新历史</button>
-        <button id="clearHistoryBtn" type="button" class="secondary">清空历史</button>
+
+      <div class="stats-grid">
+        <article class="stat-card blue"><span>⌘</span><strong>4</strong><p>废弃物类别</p></article>
+        <article class="stat-card green"><span>▣</span><strong>8213</strong><p>参考图片</p></article>
+        <article class="stat-card cyan"><span>◎</span><strong>98.30%</strong><p>测试准确率</p></article>
       </div>
-      <div id="historyList" class="history-list"></div>
-    </section>
-    <section class="panel wide">
-      <h2>知识测试</h2>
-      <div class="form-row compact">
-        <button id="loadQuizBtn" type="button">随机抽题</button>
-        <button id="submitQuizBtn" type="button">提交答案</button>
+
+      <h2 class="section-title">✦ 主要功能</h2>
+      <div class="feature-grid">
+        <article class="feature-card blue-border">
+          <div class="feature-icon blue-text">▣</div>
+          <h3>图像识别</h3>
+          <p>上传废弃物图片，系统自动识别类别并输出置信度、四分类概率和分类依据。</p>
+          <button type="button" data-view-link="recognize">立即使用</button>
+        </article>
+        <article class="feature-card green-border">
+          <div class="feature-icon green-text">⌕</div>
+          <h3>相似搜索</h3>
+          <p>基于 Qdrant 向量数据库搜索相似图片案例，快速查找参考物品和分类依据。</p>
+          <button type="button" class="green" data-view-link="similar">开始搜索</button>
+        </article>
+        <article class="feature-card cyan-border">
+          <div class="feature-icon cyan-text">●</div>
+          <h3>智能问答</h3>
+          <p>集成 DeepSeek 智能问答，为垃圾分类场景中的常见问题提供解释和建议。</p>
+          <button type="button" class="cyan" data-view-link="chat">开始问答</button>
+        </article>
+        <article class="feature-card yellow-border">
+          <div class="feature-icon yellow-text">?</div>
+          <h3>知识测试</h3>
+          <p>内置垃圾分类知识题库，支持随机抽题、提交评分和逐题解析。</p>
+          <button type="button" class="yellow" data-view-link="quiz">进入测试</button>
+        </article>
+        <article class="feature-card red-border">
+          <div class="feature-icon red-text">▤</div>
+          <h3>分类指南</h3>
+          <p>按关键词检索垃圾分类知识条目，快速查看类别、说明和处理建议。</p>
+          <button type="button" class="red" data-view-link="search">查看指南</button>
+        </article>
+        <article class="feature-card gray-border">
+          <div class="feature-icon gray-text">◷</div>
+          <h3>历史记录</h3>
+          <p>查看最近识别记录，支持刷新、删除单条记录和清空历史。</p>
+          <button type="button" class="gray" data-view-link="history">查看记录</button>
+        </article>
       </div>
-      <div id="quizList" class="quiz-list"></div>
-      <pre id="quizResult" class="result-box">题库不少于 20 道。</pre>
+    </section>
+
+    <section id="recognize" class="view">
+      <div class="module-card">
+        <div class="module-title blue-bg">▣ 图像识别</div>
+        <form id="recognizeForm" class="upload-area">
+          <label>选择图片</label>
+          <input type="file" name="image" accept="image/png,image/jpeg" required>
+          <button type="submit">上传并识别</button>
+        </form>
+        <div class="analysis-layout">
+          <div class="image-preview"><img id="recognizePreview" alt="识别图片预览"><span>等待选择图片</span></div>
+          <div id="recognizeResult" class="result-panel">请选择一张 PNG、JPG 或 JPEG 图片。</div>
+        </div>
+      </div>
+    </section>
+
+    <section id="similar" class="view">
+      <div class="module-card">
+        <div class="module-title green-bg">⌕ 相似搜索</div>
+        <form id="similarForm" class="upload-area">
+          <label>上传图片进行相似搜索</label>
+          <input type="file" name="image" accept="image/png,image/jpeg" required>
+          <button type="submit" class="green">搜索相似图片</button>
+        </form>
+        <div class="analysis-layout">
+          <div class="image-preview"><img id="similarPreview" alt="相似搜索图片预览"><span>等待选择图片</span></div>
+          <div>
+            <div id="similarSummary" class="notice-box">Qdrant 集合 waste_images 已包含 8213 条参考向量。</div>
+            <div id="similarResult" class="similar-grid"></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section id="search" class="view">
+      <div class="module-card">
+        <div class="module-title green-bg">⌕ 智能搜索</div>
+        <div class="tabs"><button class="tab active">文字搜索</button><button class="tab">图像搜索</button></div>
+        <div class="search-row">
+          <input id="searchInput" type="search" placeholder="输入垃圾名称或分类关键词...">
+          <button id="searchBtn" type="button" class="green">搜索</button>
+        </div>
+        <div id="hotKeywords" class="chips"></div>
+        <h3 class="sub-title">最近搜索</h3>
+        <div id="searchResult" class="knowledge-grid"></div>
+      </div>
+    </section>
+
+    <section id="chat" class="view">
+      <div class="module-card">
+        <div class="module-title cyan-bg">● 智能问答</div>
+        <textarea id="chatQuestion" placeholder="例如：过期药品属于什么垃圾？为什么？"></textarea>
+        <button id="chatBtn" type="button" class="cyan">开始问答</button>
+        <div id="chatResult" class="result-panel">需要配置 DEEPSEEK_API_KEY。</div>
+      </div>
+    </section>
+
+    <section id="understand" class="view">
+      <div class="module-card">
+        <div class="module-title cyan-bg">▣ 图片理解</div>
+        <form id="understandForm" class="upload-area">
+          <label>选择需要理解的图片</label>
+          <input type="file" name="image" accept="image/png,image/jpeg" required>
+          <button type="submit" class="cyan">调用星火分析</button>
+        </form>
+        <div id="understandResult" class="result-panel">需要配置星火视觉接口参数。</div>
+      </div>
+    </section>
+
+    <section id="history" class="view">
+      <div class="module-card">
+        <div class="module-title gray-bg">◷ 历史记录</div>
+        <div class="toolbar">
+          <button id="loadHistoryBtn" type="button">刷新历史</button>
+          <button id="clearHistoryBtn" type="button" class="gray">清空历史</button>
+        </div>
+        <div class="table-wrap">
+          <table>
+            <thead><tr><th>ID</th><th>图片</th><th>类别</th><th>置信度</th><th>时间</th><th>操作</th></tr></thead>
+            <tbody id="historyList"></tbody>
+          </table>
+        </div>
+      </div>
+    </section>
+
+    <section id="quiz" class="view">
+      <div class="module-card">
+        <div class="module-title yellow-bg">? 知识测试</div>
+        <div class="toolbar">
+          <button id="loadQuizBtn" type="button" class="yellow">随机抽题</button>
+          <button id="submitQuizBtn" type="button">提交答案</button>
+        </div>
+        <div id="quizList" class="quiz-list"></div>
+        <div id="quizResult" class="result-panel compact-panel">题库不少于 20 道。</div>
+      </div>
     </section>
   </main>
+
+  <footer class="site-footer">
+    <div><strong>♻ 基于深度学习的废弃物数据管理系统</strong><p>基于深度学习的废弃物数据管理系统解决方案</p></div>
+    <div><strong>快速链接</strong><a href="#recognize" data-view-link="recognize">图像识别</a><a href="#search" data-view-link="search">分类指南</a><a href="#history" data-view-link="history">历史记录</a></div>
+    <div><strong>联系我们</strong><p>contact@example.com</p><p>400-123-4567</p></div>
+  </footer>
   <script src="/app.js"></script>
 </body>
 </html>

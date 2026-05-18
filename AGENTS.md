@@ -19,7 +19,7 @@
 
 ## Current Status
 
-当前已经完成四分类数据集整理、ResNet50 远端 Slurm GPU 训练、本地 Qdrant 向量索引构建和相似检索接口验证。训练数据来自 `Garbage Classification (12 classes).zip`，已整理为可回收物、有害垃圾、厨余垃圾、其他垃圾四类，共 8213 张图片。远端训练结果已经通过 GitHub Release 同步回本地 `models/` 目录，本地包含 `resnet50_waste.pt`、`class_map.json`、`classification_report.txt` 和 `training_metrics.json`。本地 Qdrant 容器使用 `http://localhost:63330` 访问，`waste_images` 集合已写入 8213 条 2048 维图片特征向量。
+当前已经完成四分类数据集整理、ResNet50 远端 Slurm GPU 训练、本地 Qdrant 向量索引构建、相似检索接口验证和演示视频风格前端改造。训练数据来自 `Garbage Classification (12 classes).zip`，已整理为可回收物、有害垃圾、厨余垃圾、其他垃圾四类，共 8213 张图片。远端训练结果已经通过 GitHub Release 同步回本地 `models/` 目录，本地包含 `resnet50_waste.pt`、`class_map.json`、`classification_report.txt` 和 `training_metrics.json`。本地 Qdrant 容器使用 `http://localhost:63330` 访问，`waste_images` 集合已写入 8213 条 2048 维图片特征向量。前端已按参考视频调整为蓝色顶栏、居中内容区、统计卡、功能入口卡和模块页管理后台风格。
 
 ## Recent Changes
 
@@ -30,17 +30,21 @@
 - 已修复 `qdrant-client` 新版兼容问题：相似检索服务优先使用 `query_points()`，并保留旧版 `search()` 兜底。
 - 已用 `battery__battery1.jpg` 验证 `/api/similar-search`：首次请求约 14.01 秒，热启动后两次约 893.19 毫秒和 891.63 毫秒，返回 1 条结果，最高相似度 1.0。
 - 已运行 `.venv\Scripts\python.exe -m pytest -q`，结果为 11 passed。
+- 已根据 `5c26f2b31b174502601e10d5e79ea072.mp4` 演示视频改造前端界面，覆盖首页、图像识别、相似搜索、智能搜索、智能问答、图片理解、历史记录和知识测试视图。
+- 已新增 `/media/<path>` 安全图片预览路由，只允许读取 `uploads`、`data/raw` 和 `data/processed` 下的图片，用于展示上传图、历史图和相似检索图。
 - `models/resnet50_waste.pt` 为较大的模型权重文件，按 `.gitignore` 规则不纳入普通 Git 提交；分类报告、类别映射和训练指标可作为说明书测试章节证据。
 
 ## Next TODO
 
 - 将模型测试准确率、分类报告、训练环境和关键训练日志补入 `docs/毕业设计说明书.md` 的系统测试章节。
 - 将 Qdrant 索引规模、相似检索耗时和返回示例补入 `docs/毕业设计说明书.md` 的系统测试章节。
+- 继续人工演示检查新前端在真实上传识别、相似检索和移动端下的视觉细节。
 - 补充 DeepSeek/星火真实接口调用结果。
 
 ## Open Issues
 
 - 相似检索接口已验证，但正式说明书还未写入对应测试证据。
+- 前端已按视频风格改造并通过截图检查，但真实上传演示和移动端细节仍建议再人工走一遍。
 - DeepSeek 与星火接口仍待真实密钥环境验证。
 - 正式 DOCX 交付前仍需做版式检查，确认图片、表格和正文不存在遮挡或拥挤。
 

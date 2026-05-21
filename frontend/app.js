@@ -47,6 +47,8 @@ createApp({
         { id: 'similar', label: '相似检索', icon: '检' },
         { id: 'search', label: '分类知识', icon: '知' },
         { id: 'chat', label: '智能问答', icon: '问' },
+        { id: 'understand', label: '图片理解', icon: '图' },
+        { id: 'history', label: '历史记录', icon: '史' },
       ],
       stats: [
         { label: '分类数量', value: '4', tone: 'blue' },
@@ -57,9 +59,9 @@ createApp({
         { id: 'recognize', title: '图像识别', tag: 'ResNet50', icon: '识', desc: '上传图片后返回四分类结果、置信度和分类依据。', action: '上传识别', tone: 'blue' },
         { id: 'similar', title: '相似检索', tag: 'Qdrant', icon: '检', desc: '用图像特征检索相似案例，辅助解释分类结果。', action: '检索案例', tone: 'green' },
         { id: 'search', title: '分类知识', tag: '知识库', icon: '知', desc: '按物品名称查询分类类别和处理建议。', action: '查询知识', tone: 'green' },
-        { id: 'chat', title: '智能问答', tag: 'DeepSeek', icon: '问', desc: '面向分类问题提供问答入口，未配置密钥时返回明确提示。', action: '提问', tone: 'cyan' },
-        { id: 'understand', title: '图片理解', tag: '星火', icon: '图', desc: '预留多模态图片理解接口，用于复杂场景分析。', action: '图片分析', tone: 'cyan' },
-        { id: 'history', title: '历史记录', tag: '史', desc: '保存识别记录，支持查看、删除和清空。', action: '查看记录', tone: 'gray' },
+        { id: 'chat', title: '智能问答', tag: 'DeepSeek', icon: '问', desc: '面向分类问题提供问答入口，可直接提交垃圾分类相关问题。', action: '提问', tone: 'cyan' },
+        { id: 'understand', title: '图片理解', tag: 'Kimi', icon: '图', desc: '调用 Kimi 多模态接口分析图片内容，辅助解释复杂场景。', action: '图片分析', tone: 'cyan' },
+        { id: 'history', title: '历史记录', tag: 'SQLite', icon: '史', desc: '保存识别记录，支持查看、删除和清空。', action: '查看记录', tone: 'gray' },
       ],
       recognizePreview: '',
       recognizeResult: null,
@@ -73,8 +75,9 @@ createApp({
       searchResults: [],
       searchMessage: '输入关键词查看分类知识。',
       chatQuestion: '',
-      chatAnswer: '需要配置 DEEPSEEK_API_KEY。',
-      understandResult: '需要配置星火视觉接口参数。',
+      chatAnswer: 'DeepSeek 智能问答已接入，请输入垃圾分类相关问题。',
+      understandPreview: '',
+      understandResult: 'Kimi 多模态图片理解已接入，请上传图片进行分析。',
       historyItems: [],
       historyMessage: '暂无历史记录。',
       quizItems: [],
@@ -126,6 +129,7 @@ createApp({
       const url = URL.createObjectURL(file);
       if (type === 'recognize') this.recognizePreview = url;
       if (type === 'similar') this.similarPreview = url;
+      if (type === 'understand') this.understandPreview = url;
     },
     formDataFrom(refName) {
       const input = this.$refs[refName];

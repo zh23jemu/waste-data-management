@@ -4,7 +4,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>废弃物数据管理系统</title>
-  <link rel="stylesheet" href="/styles.css">
+  <link rel="stylesheet" href="/styles.css?v=compact-hero-20260518">
 </head>
 <body>
   <div id="app" class="app-shell" v-cloak>
@@ -170,10 +170,13 @@
         <module-card title="图片理解" tone="cyan">
           <form class="upload-area" @submit.prevent="understandImage">
             <label>图片文件</label>
-            <input ref="understandInput" type="file" accept="image/png,image/jpeg" required>
+            <input ref="understandInput" type="file" accept="image/png,image/jpeg" required @change="previewFile('understand', $event)">
             <button type="submit" class="cyan">分析图片</button>
           </form>
-          <div class="result-panel compact-panel">{{ understandResult }}</div>
+          <div class="analysis-layout">
+            <image-preview :src="understandPreview" text="未选择图片"></image-preview>
+            <div class="result-panel">{{ understandResult }}</div>
+          </div>
         </module-card>
       </section>
 
@@ -230,6 +233,6 @@
     </div>
   </div>
   <script src="/vendor/vue.global.prod.js"></script>
-  <script src="/app.js?v=hide-quiz-20260518"></script>
+  <script src="/app.js?v=understand-preview-20260521"></script>
 </body>
 </html>

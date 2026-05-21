@@ -13,6 +13,8 @@ class TestConfig(Config):
     TESTING = True
     DATABASE_PATH = Config.BASE_DIR / "instance/test.sqlite3"
     UPLOAD_FOLDER = Config.BASE_DIR / "uploads/test"
+    DEEPSEEK_API_KEY = ""
+    KIMI_API_KEY = ""
 
 
 def test_health_endpoint():
@@ -95,8 +97,8 @@ def test_chat_without_deepseek_key_returns_readable_error():
     assert "DEEPSEEK_API_KEY" in response.get_json()["message"]
 
 
-def test_image_understanding_without_xunfei_config_returns_readable_error():
-    """星火图片理解缺少配置时，应返回清晰错误，便于演示前补齐 .env。"""
+def test_image_understanding_without_kimi_config_returns_readable_error():
+    """Kimi 多模态缺少配置时，应返回清晰错误，便于演示前补齐 .env。"""
     app = create_app(TestConfig)
     client = app.test_client()
     response = client.post(
@@ -105,7 +107,7 @@ def test_image_understanding_without_xunfei_config_returns_readable_error():
         content_type="multipart/form-data",
     )
     assert response.status_code == 503
-    assert "星火图片理解配置不完整" in response.get_json()["message"]
+    assert "KIMI_API_KEY" in response.get_json()["message"]
 
 
 def test_quiz_submit_scores_answers():

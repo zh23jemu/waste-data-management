@@ -35,7 +35,6 @@ class Config:
     DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/chat/completions")
     DEEPSEEK_MODEL = os.getenv("DEEPSEEK_MODEL", "deepseek-chat")
 
-    XUNFEI_APP_ID = os.getenv("XUNFEI_APP_ID", "")
-    XUNFEI_API_KEY = os.getenv("XUNFEI_API_KEY", "")
-    XUNFEI_API_SECRET = os.getenv("XUNFEI_API_SECRET", "")
-    XUNFEI_VISION_URL = os.getenv("XUNFEI_VISION_URL", "")
+    KIMI_API_KEY = os.getenv("KIMI_API_KEY", "")
+    KIMI_BASE_URL = os.getenv("KIMI_BASE_URL", "https://api.moonshot.cn/v1/chat/completions")
+    KIMI_MODEL = os.getenv("KIMI_MODEL", "kimi-k2.6")

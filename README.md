@@ -1,6 +1,6 @@
 # 基于深度学习的废弃物数据管理系统
 
-本项目用于推进“基于深度学习的废弃物数据管理系统”毕业设计，包含 Flask Web 系统、ResNet50 训练/推理脚本、垃圾分类知识库、真实 DeepSeek/星火 API 接入入口，以及毕业设计说明书 Markdown 初稿。
+本项目用于推进“基于深度学习的废弃物数据管理系统”毕业设计，包含 Flask Web 系统、ResNet50 训练/推理脚本、垃圾分类知识库、真实 DeepSeek/Kimi API 接入入口，以及毕业设计说明书 Markdown 初稿。
 
 ## 功能模块
 
@@ -8,7 +8,7 @@
 - 相似搜索：基于 ResNet50 特征与 Qdrant 向量数据库检索相似案例。
 - 文字检索：内置垃圾分类知识库，支持关键词查询和热门搜索建议。
 - 智能交流：通过 DeepSeek API 回答垃圾分类问题。
-- 图片理解：通过星火视觉接口分析图片内容并给出分类建议。
+- 图片理解：通过 Kimi 多模态接口分析图片内容并给出分类建议。
 - 历史记录：SQLite 保存识别记录，支持分页、删除和清空。
 - 知识测试：内置不少于 20 道题，支持随机抽题、即时反馈和得分统计。
 
@@ -19,7 +19,7 @@
 Copy-Item .env.example .env
 ```
 
-然后在 `.env` 中填写 DeepSeek 与星火 API 密钥。密钥只保存在本机 `.env`，不要提交到仓库。
+然后在 `.env` 中填写 DeepSeek 与 Kimi API 密钥。密钥只保存在本机 `.env`，不要提交到仓库。
 
 ## 启动系统
 
@@ -89,6 +89,6 @@ sbatch --partition=gpu scripts/train_resnet50.slurm
 
 ## 当前状态说明
 
-当前仓库已经具备可运行 Flask 原型、训练脚本、Qdrant 建索引脚本和论文 Markdown 初稿。真实模型准确率、Qdrant 千级向量检索性能、DeepSeek/星火真实调用结果，需要在补齐数据集和 `.env` 密钥后进一步验证，不能用模拟结果替代。
+当前仓库已经具备可运行 Flask 原型、训练脚本、Qdrant 建索引脚本和论文 Markdown 初稿。真实模型准确率、Qdrant 千级向量检索性能、DeepSeek/Kimi 真实调用结果，需要在补齐数据集和 `.env` 密钥后进一步验证，不能用模拟结果替代。
 
 截至当前检查，Garbage Classification 12 类数据集已整理成四分类训练目录，合计 8213 张图片：`recyclable` 5586 张、`hazardous` 945 张、`kitchen` 985 张、`other` 697 张。下一步应优先使用 GPU 完成 ResNet50 训练，再构建 Qdrant 相似搜索索引。

@@ -11,9 +11,9 @@ from werkzeug.utils import secure_filename
 from .knowledge import HOT_KEYWORDS, QUESTIONS, search_knowledge
 from .services.deepseek_service import ExternalApiError, ask_deepseek
 from .services.history_service import add_history, clear_history, delete_history, list_history
+from .services.kimi_service import analyze_image_with_kimi
 from .services.model_service import ModelNotReadyError, WasteClassifier
 from .services.similarity_service import SimilaritySearchError, SimilarityService
-from .services.xunfei_service import analyze_image_with_xunfei
 
 api_bp = Blueprint("api", __name__)
 _classifier_cache: WasteClassifier | None = None
@@ -135,15 +135,14 @@ def chat():
 
 @api_bp.post("/image-understanding")
 def image_understanding():
-    """星火图片理解接口。"""
+    """Kimi 多模态图片理解接口。"""
     try:
         image_path = save_upload("image")
-        answer = analyze_image_with_xunfei(
+        answer = analyze_image_with_kimi(
             image_path,
-            app_id=current_app.config["XUNFEI_APP_ID"],
-            api_key=current_app.config["XUNFEI_API_KEY"],
-            api_secret=current_app.config["XUNFEI_API_SECRET"],
-            vision_url=current_app.config["XUNFEI_VISION_URL"],
+            api_key=current_app.config["KIMI_API_KEY"],
+            base_url=current_app.config["KIMI_BASE_URL"],
+            model=current_app.config["KIMI_MODEL"],
         )
         return jsonify({"ok": True, "data": {"answer": answer}})
     except ExternalApiError as exc:

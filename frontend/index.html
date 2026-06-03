@@ -149,9 +149,18 @@
           </div>
           <div class="knowledge-grid">
             <article v-for="item in searchResults" :key="item.name" class="knowledge-card">
-              <strong>{{ item.name }}</strong>
-              <span>{{ labelOf(item.category) }}</span>
-              <p>{{ item.description }}</p>
+              <div class="knowledge-row">
+                <span class="knowledge-label">物品名称</span>
+                <strong class="knowledge-value">{{ item.item_name || item.name }}</strong>
+              </div>
+              <div class="knowledge-row">
+                <span class="knowledge-label">类别</span>
+                <strong class="knowledge-value category">{{ item.category_label || labelOf(item.category) }}</strong>
+              </div>
+              <div class="knowledge-row advice">
+                <span class="knowledge-label">投放建议</span>
+                <p class="knowledge-value">{{ item.disposal_advice || item.guide }}</p>
+              </div>
             </article>
             <article v-if="searchMessage" class="knowledge-card empty">{{ searchMessage }}</article>
           </div>

@@ -43,7 +43,24 @@ def test_search_returns_known_item():
     data = response.get_json()
     assert response.status_code == 200
     assert data["ok"] is True
-    assert any(item["category"] == "hazardous" for item in data["data"])
+    battery = next(item for item in data["data"] if item["category"] == "hazardous")
+    assert battery["item_name"] == "废电池"
+    assert battery["category_label"] == "有害垃圾"
+    assert "有害垃圾" in battery["disposal_advice"]
+
+
+def test_search_returns_recyclable_bottle_advice():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    response = client.get("/api/search?q=塑料瓶")
+    data = response.get_json()
+    assert response.status_code == 200
+    assert data["ok"] is True
+    bottle = next(item for item in data["data"] if item["item_name"] == "塑料瓶")
+    assert bottle["category"] == "recyclable"
+    assert bottle["category_label"] == "可回收物"
+    assert "清空" in bottle["disposal_advice"]
+    assert "压扁" in bottle["disposal_advice"]
 
 
 def test_missing_model_returns_clear_error(tmp_path: Path):

@@ -33,7 +33,7 @@ KNOWLEDGE_BASE = [
     WasteKnowledge("废纸箱", "recyclable", ("纸盒", "快递箱"), "去除胶带和污染物，压平后投放。", ("快递纸箱", "包装盒")),
     WasteKnowledge("玻璃瓶", "recyclable", ("酒瓶", "调料瓶"), "倒空液体，避免破碎伤人，投放至可回收物。", ("啤酒瓶", "酱油瓶")),
     WasteKnowledge("旧衣物", "recyclable", ("衣服", "纺织物"), "干净衣物可回收或捐赠，严重污染时按其他垃圾处理。", ("外套", "裤子")),
-    WasteKnowledge("废电池", "hazardous", ("电池", "纽扣电池"), "含重金属或化学物质，应投放有害垃圾。", ("纽扣电池", "充电电池")),
+    WasteKnowledge("废电池", "hazardous", ("电池", "纽扣电池"), "含重金属或化学物质，应投放至有害垃圾收集容器，避免混入普通垃圾。", ("纽扣电池", "充电电池")),
     WasteKnowledge("过期药品", "hazardous", ("药片", "胶囊"), "连同包装投放至有害垃圾，避免随意丢弃。", ("感冒药", "消炎药")),
     WasteKnowledge("灯管", "hazardous", ("荧光灯", "节能灯"), "可能含汞，需轻放至有害垃圾收集点。", ("节能灯管", "荧光灯管")),
     WasteKnowledge("油漆桶", "hazardous", ("涂料桶", "油漆"), "残留油漆属于有害成分，应按有害垃圾处理。", ("油漆桶", "涂料罐")),
@@ -74,7 +74,12 @@ QUESTIONS = [
 
 
 def search_knowledge(keyword: str) -> list[dict[str, object]]:
-    """按关键词检索知识库。"""
+    """按物品关键词检索分类知识条目。
+
+    前端知识检索模块面向“知道物品名称但不知道类别”的场景，因此返回结果
+    明确拆成物品名称、类别和投放建议三类信息；同时保留旧字段，避免影响
+    其他已有调用方。
+    """
     normalized = keyword.strip().lower()
     if not normalized:
         return []
@@ -83,9 +88,11 @@ def search_knowledge(keyword: str) -> list[dict[str, object]]:
         haystack = " ".join((item.name, item.category, *item.aliases, item.guide, *item.examples)).lower()
         if normalized in haystack:
             results.append({
+                "item_name": item.name,
                 "name": item.name,
                 "category": item.category,
                 "category_label": CATEGORY_LABELS[item.category],
+                "disposal_advice": item.guide,
                 "guide": item.guide,
                 "examples": list(item.examples),
             })

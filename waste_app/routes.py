@@ -8,9 +8,17 @@ from flask import Blueprint, current_app, jsonify, request
 from werkzeug.exceptions import RequestEntityTooLarge
 from werkzeug.utils import secure_filename
 
-from .knowledge import HOT_KEYWORDS, QUESTIONS, search_knowledge
-from .services.deepseek_service import ExternalApiError, ask_deepseek
-from .services.history_service import add_history, clear_history, delete_history, list_history
+from .knowledge import CATEGORY_LABELS, HOT_KEYWORDS, QUESTIONS, search_knowledge
+from .services.deepseek_service import ExternalApiError, ask_deepseek, ask_deepseek_json
+from .services.history_service import (
+    add_history,
+    add_search_history,
+    clear_history,
+    clear_search_history,
+    delete_history,
+    list_history,
+    list_search_history,
+)
 from .services.kimi_service import analyze_image_with_kimi
 from .services.model_service import ModelNotReadyError, WasteClassifier
 from .services.similarity_service import SimilaritySearchError, SimilarityService
@@ -54,6 +62,84 @@ def classifier() -> WasteClassifier:
     if _classifier_cache is None:
         _classifier_cache = WasteClassifier(current_app.config["MODEL_PATH"], current_app.config["CLASS_MAP_PATH"])
     return _classifier_cache
+
+
+def category_code_from_label(label: object) -> str:
+    """将 DeepSeek 返回的中文类别名称归一化为系统内部类别编码。
+
+    分类知识检索现在由 AI 同时负责“匹配物品”和“生成投放建议”，但前端、
+    测试和历史逻辑仍然使用 recyclable/hazardous/kitchen/other 这四个稳定编码。
+    这里集中做一次容错映射，避免接口返回中文类别后影响既有展示结构。
+    """
+    text = str(label or "").strip().lower()
+    for code, chinese_label in CATEGORY_LABELS.items():
+        if code in text or chinese_label in text:
+            return code
+    if "可回收" in text:
+        return "recyclable"
+    if "有害" in text:
+        return "hazardous"
+    if "厨余" in text or "湿垃圾" in text:
+        return "kitchen"
+    return "other"
+
+
+def ai_knowledge_item(payload: dict[str, object], keyword: str, fallback: dict[str, object] | None = None) -> dict[str, object]:
+    """把 DeepSeek 的结构化结果整理成前端知识卡片需要的统一字段。
+
+    fallback 用于本地知识库已命中的场景：AI 负责润色类别和建议，本地条目继续提供
+    示例、原始类别等稳定信息；没有 fallback 时，说明“匹配物品”也完全交给 AI。
+    """
+    item_name = str(payload.get("item_name") or (fallback or {}).get("item_name") or keyword).strip()
+    category_label = str(payload.get("category_label") or (fallback or {}).get("category_label") or "其他垃圾").strip()
+    category = str((fallback or {}).get("category") or category_code_from_label(category_label))
+    disposal_advice = str(payload.get("disposal_advice") or (fallback or {}).get("guide") or "请根据当地分类规则投放。").strip()
+    explanation = str(payload.get("explanation") or (fallback or {}).get("explanation") or "该结果由 DeepSeek 根据物品名称和垃圾分类规则生成。").strip()
+    examples = (fallback or {}).get("examples") or []
+    return {
+        "item_name": item_name,
+        "name": item_name,
+        "category": category,
+        "category_label": category_label,
+        "disposal_advice": disposal_advice,
+        "guide": disposal_advice,
+        "examples": examples,
+        "explanation": explanation,
+        "source": "deepseek",
+    }
+
+
+def ask_ai_for_knowledge(keyword: str, local_item: dict[str, object] | None = None) -> dict[str, object]:
+    """请求 DeepSeek 生成单个分类知识结果。
+
+    当 local_item 为空时，AI 需要先判断用户输入最可能对应的“匹配物品”，再给出
+    类别、投放建议和简短解释；这样前端不会再出现“未找到匹配条目”的本地兜底文案。
+    """
+    if local_item:
+        prompt = (
+            "请根据以下垃圾分类知识，输出结构化 JSON。\n"
+            f"用户输入：{keyword}\n"
+            f"本地匹配物品：{local_item['item_name']}\n"
+            f"本地类别：{local_item['category_label']}\n"
+            f"本地投放建议：{local_item['guide']}\n"
+            f"本地分类依据：{local_item['explanation']}\n"
+            "要求：保留或修正最合适的匹配物品名称，给出自然的类别名称和投放建议，解释不要太长。"
+        )
+    else:
+        prompt = (
+            "用户输入了一个废弃物名称，请你判断最可能的匹配物品，并给出垃圾分类建议。\n"
+            f"用户输入：{keyword}\n"
+            "要求：必须输出结构化 JSON；item_name 填写你判断出的匹配物品名称；"
+            "category_label 只能在可回收物、有害垃圾、厨余垃圾、其他垃圾中选择；"
+            "disposal_advice 给出可直接展示给用户的投放建议；explanation 用一句话说明判断依据。"
+        )
+    payload = ask_deepseek_json(
+        prompt,
+        api_key=current_app.config["DEEPSEEK_API_KEY"],
+        base_url=current_app.config["DEEPSEEK_BASE_URL"],
+        model=current_app.config["DEEPSEEK_MODEL"],
+    )
+    return ai_knowledge_item(payload, keyword, local_item)
 
 
 @api_bp.get("/config")
@@ -117,7 +203,38 @@ def similar_search():
 def text_search():
     """文字检索接口。"""
     keyword = request.args.get("q", "")
-    return jsonify({"ok": True, "data": search_knowledge(keyword), "hot_keywords": HOT_KEYWORDS})
+    results = search_knowledge(keyword)
+    search_history = list_search_history(current_app.config["DATABASE_PATH"])
+    if not keyword.strip():
+        return jsonify({"ok": True, "data": results, "history_keywords": search_history})
+
+    enriched_results = []
+    if not results:
+        try:
+            enriched_results.append(ask_ai_for_knowledge(keyword))
+        except ExternalApiError as exc:
+            return error_response(str(exc), 503)
+    for item in results[:5]:
+        try:
+            enriched_results.append(ask_ai_for_knowledge(keyword, item))
+        except ExternalApiError:
+            enriched_results.append(item)
+    add_search_history(current_app.config["DATABASE_PATH"], keyword)
+    search_history = list_search_history(current_app.config["DATABASE_PATH"])
+    return jsonify({"ok": True, "data": enriched_results or results, "history_keywords": search_history})
+
+
+@api_bp.get("/search/history")
+def search_history_list():
+    """返回分类知识检索关键词历史。"""
+    limit = int(request.args.get("limit", "8"))
+    return jsonify({"ok": True, "data": list_search_history(current_app.config["DATABASE_PATH"], limit)})
+
+
+@api_bp.delete("/search/history")
+def search_history_clear():
+    """清空分类知识检索关键词历史。"""
+    return jsonify({"ok": True, "deleted": clear_search_history(current_app.config["DATABASE_PATH"])})
 
 
 @api_bp.post("/chat")

@@ -156,8 +156,13 @@
             <input v-model.trim="keyword" type="search" placeholder="输入物品名称，例如：电池、塑料瓶、果皮">
             <button type="button" class="green" @click="doSearch">搜索</button>
           </div>
+          <div class="section-heading section-heading-compact">
+            <h3>历史记录</h3>
+            <span>最近搜索过的关键词</span>
+          </div>
           <div class="chips">
-            <button v-for="word in hotKeywords" :key="word" type="button" @click="useKeyword(word)">{{ word }}</button>
+            <button v-for="word in searchHistory" :key="word" type="button" @click="useKeyword(word)">{{ word }}</button>
+            <span v-if="!searchHistory.length" class="chips-empty">暂无历史记录</span>
           </div>
           <div class="knowledge-grid">
             <article v-for="item in searchResults" :key="item.name" class="knowledge-card">

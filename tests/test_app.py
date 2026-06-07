@@ -63,6 +63,87 @@ def test_search_returns_recyclable_bottle_advice():
     assert "压扁" in bottle["disposal_advice"]
 
 
+def test_search_endpoint_returns_history_keywords_when_query_is_empty():
+    app = create_app(TestConfig)
+    client = app.test_client()
+    response = client.get("/api/search?q=")
+    data = response.get_json()
+    assert response.status_code == 200
+    assert data["ok"] is True
+    assert "history_keywords" in data
+    assert isinstance(data["history_keywords"], list)
+
+
+def test_search_endpoint_uses_deepseek_json_when_available(monkeypatch):
+    app = create_app(TestConfig)
+    client = app.test_client()
+
+    def fake_deepseek_json(prompt, *, api_key, base_url, model):
+        return {
+            "item_name": "废电池",
+            "category_label": "有害垃圾",
+            "disposal_advice": "投放至有害垃圾收集容器。",
+            "explanation": "含有重金属，应单独投放。",
+        }
+
+    monkeypatch.setattr("waste_app.routes.ask_deepseek_json", fake_deepseek_json)
+    response = client.get("/api/search?q=电池")
+    data = response.get_json()
+    assert response.status_code == 200
+    assert data["ok"] is True
+    item = next(row for row in data["data"] if row["item_name"] == "废电池")
+    assert item["category_label"] == "有害垃圾"
+    assert "有害垃圾收集容器" in item["disposal_advice"]
+    assert "含有重金属" in item["explanation"]
+    history_response = client.get("/api/search/history")
+    assert history_response.status_code == 200
+    assert "电池" in history_response.get_json()["data"]
+
+
+def test_search_endpoint_uses_ai_for_unmatched_item(monkeypatch):
+    app = create_app(TestConfig)
+    client = app.test_client()
+
+    def fake_deepseek_json(prompt, *, api_key, base_url, model):
+        assert "用户输入：易拉罐" in prompt
+        return {
+            "item_name": "易拉罐",
+            "category_label": "可回收物",
+            "disposal_advice": "清空残留液体，简单压扁后投放至可回收物。",
+            "explanation": "金属饮料罐具有回收再利用价值。",
+        }
+
+    monkeypatch.setattr("waste_app.routes.ask_deepseek_json", fake_deepseek_json)
+    response = client.get("/api/search?q=易拉罐")
+    data = response.get_json()
+    assert response.status_code == 200
+    assert data["ok"] is True
+    assert len(data["data"]) == 1
+    item = data["data"][0]
+    assert item["item_name"] == "易拉罐"
+    assert item["category"] == "recyclable"
+    assert item["category_label"] == "可回收物"
+    assert "压扁" in item["disposal_advice"]
+    assert item["source"] == "deepseek"
+
+
+def test_search_endpoint_never_returns_not_found_copy_when_ai_fails(monkeypatch):
+    app = create_app(TestConfig)
+    client = app.test_client()
+
+    def fake_deepseek_json(prompt, *, api_key, base_url, model):
+        from waste_app.services.deepseek_service import ExternalApiError
+
+        raise ExternalApiError("DeepSeek API 暂不可用，请稍后重试。")
+
+    monkeypatch.setattr("waste_app.routes.ask_deepseek_json", fake_deepseek_json)
+    response = client.get("/api/search?q=易拉罐")
+    data = response.get_json()
+    assert response.status_code == 503
+    assert data["ok"] is False
+    assert "未找到匹配条目" not in data["message"]
+
+
 def test_missing_model_returns_clear_error(tmp_path: Path):
     class MissingModelConfig(TestConfig):
         MODEL_PATH = tmp_path / "missing_resnet50_waste.pt"
@@ -176,6 +257,40 @@ def test_history_list_delete_and_clear(tmp_path: Path):
     clear_response = client.delete("/api/history")
     assert clear_response.status_code == 200
     assert clear_response.get_json()["deleted"] == 1
+
+
+def test_search_history_is_persisted_and_ordered(tmp_path: Path, monkeypatch):
+    """分类知识检索历史应写入 SQLite，并按最近搜索顺序返回。"""
+    class IsolatedConfig(TestConfig):
+        DATABASE_PATH = tmp_path / "search_history.sqlite3"
+
+    app = create_app(IsolatedConfig)
+    client = app.test_client()
+
+    def fake_deepseek_json(prompt, *, api_key, base_url, model):
+        return {
+            "item_name": "测试物品",
+            "category_label": "其他垃圾",
+            "disposal_advice": "按其他垃圾投放。",
+            "explanation": "测试用结构化结果。",
+        }
+
+    monkeypatch.setattr("waste_app.routes.ask_deepseek_json", fake_deepseek_json)
+    assert client.get("/api/search?q=电池").status_code == 200
+    assert client.get("/api/search?q=易拉罐").status_code == 200
+    assert client.get("/api/search?q=电池").status_code == 200
+
+    history_response = client.get("/api/search/history?limit=8")
+    history_data = history_response.get_json()["data"]
+    assert history_response.status_code == 200
+    assert history_data[:2] == ["电池", "易拉罐"]
+
+    empty_query_response = client.get("/api/search?q=")
+    assert empty_query_response.get_json()["history_keywords"][:2] == ["电池", "易拉罐"]
+
+    clear_response = client.delete("/api/search/history")
+    assert clear_response.status_code == 200
+    assert clear_response.get_json()["deleted"] == 2
 
 
 def test_similarity_service_supports_qdrant_query_points(monkeypatch, tmp_path: Path):

@@ -71,7 +71,7 @@ createApp({
       similarResults: [],
       similarMessage: 'Qdrant 集合 waste_images 已包含 8213 条参考向量。',
       keyword: '',
-      hotKeywords: [],
+      searchHistory: [],
       searchResults: [],
       searchMessage: '输入关键词查看分类知识。',
       chatQuestion: '',
@@ -169,9 +169,12 @@ createApp({
       }
     },
     async loadConfig() {
+      await this.loadSearchHistory();
+    },
+    async loadSearchHistory() {
       try {
-        const data = await requestJson('/api/search?q=');
-        this.hotKeywords = data.hot_keywords || [];
+        const data = await requestJson('/api/search/history?limit=8');
+        this.searchHistory = Array.isArray(data.data) ? data.data : [];
       } catch (error) {
         console.warn(error.message);
       }
@@ -186,7 +189,8 @@ createApp({
       try {
         const data = await requestJson(`/api/search?q=${encodeURIComponent(this.keyword)}`);
         this.searchResults = data.data;
-        this.searchMessage = data.data.length ? '' : '未找到匹配条目，可换一个关键词。';
+        this.searchMessage = data.data.length ? '' : 'AI 正在整理分类建议，请稍后重试。';
+        this.searchHistory = Array.isArray(data.history_keywords) ? data.history_keywords : this.searchHistory;
       } catch (error) {
         this.searchMessage = error.message;
       }

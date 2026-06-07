@@ -60,7 +60,9 @@ button:hover { transform: translateY(-1px); filter: brightness(.98); box-shadow:
 .gray, .gray-bg { background: linear-gradient(135deg, #64748b, #334155); }
 .section-heading { display: flex; justify-content: space-between; align-items: center; margin: 4px 0 14px; }
 .section-heading h2 { margin: 0; font-size: 22px; }
+.section-heading h3 { margin: 0; font-size: 16px; }
 .section-heading span { color: var(--muted); }
+.section-heading-compact { justify-content: flex-start; gap: 14px; margin: 16px 0 10px; padding: 0 20px; }
 .feature-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
 .feature-card, .module-card { background: var(--panel); border: 1px solid rgba(226, 232, 240, .9); border-radius: 22px; box-shadow: 0 18px 45px rgba(15, 23, 42, .08); }
 .feature-card { padding: 20px; min-height: 190px; display: flex; flex-direction: column; gap: 14px; }
@@ -111,6 +113,7 @@ textarea { width: calc(100% - 40px); min-height: 150px; margin: 20px; resize: ve
 .similar-score strong { text-align: right; }
 .chips { padding: 0 20px 16px; display: flex; gap: 8px; flex-wrap: wrap; }
 .chips button { color: #1d4ed8; background: #eff6ff; border: 1px solid #bfdbfe; padding: 7px 10px; box-shadow: none; }
+.chips-empty { color: var(--muted); font-size: 13px; padding: 6px 2px; }
 .knowledge-grid { padding: 0 20px 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(320px, 1fr)); gap: 14px; }
 .knowledge-card { border: 1px solid #e1e8f0; border-radius: 18px; background: #fff; padding: 16px 18px; min-height: 0; display: grid; gap: 12px; font-size: 13px; line-height: 1.55; }
 .knowledge-row { display: grid; grid-template-columns: 76px minmax(0, 1fr); gap: 14px; align-items: start; }

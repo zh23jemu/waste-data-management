@@ -13,6 +13,18 @@ class WasteKnowledge:
     guide: str
     examples: tuple[str, ...]
 
+    def to_prompt_text(self) -> str:
+        """转换为适合传给大模型的简洁提示文本。"""
+        aliases = "、".join(self.aliases) if self.aliases else "无"
+        examples = "、".join(self.examples) if self.examples else "无"
+        return (
+            f"物品名称：{self.name}\n"
+            f"类别：{self.category}\n"
+            f"别名：{aliases}\n"
+            f"本地建议：{self.guide}\n"
+            f"示例：{examples}"
+        )
+
 
 CATEGORY_LABELS = {
     "recyclable": "可回收物",
@@ -95,5 +107,6 @@ def search_knowledge(keyword: str) -> list[dict[str, object]]:
                 "disposal_advice": item.guide,
                 "guide": item.guide,
                 "examples": list(item.examples),
+                "explanation": CLASS_RATIONALES[item.category],
             })
     return results

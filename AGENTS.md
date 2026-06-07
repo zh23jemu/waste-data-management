@@ -28,8 +28,9 @@
 - 已启动本地 Qdrant 容器 `qdrant-63330`，由于 Windows 保留了 `6256-6355` 端口段，宿主机端口改用 `63330/63340` 映射容器内 `6333/6334`。
 - 已运行 `.venv\Scripts\python.exe scripts\build_qdrant_index.py --image-dir data/raw --qdrant-url http://localhost:63330 --recreate`，完成 `waste_images` 集合索引构建。
 - 已修复 `qdrant-client` 新版兼容问题：相似检索服务优先使用 `query_points()`，并保留旧版 `search()` 兜底。
-- 已用 `battery__battery1.jpg` 验证 `/api/similar-search`：首次请求约 14.01 秒，热启动后两次约 893.19 毫秒和 891.63 毫秒，返回 1 条结果，最高相似度 1.0。
-- 已运行 `.venv\Scripts\python.exe -m pytest -q`，结果为 11 passed。
+- 已将 `/api/similar-search` 从高阈值少量命中改为 Top-N 相似结果模式，默认最多返回 8 条候选，便于展示原图 100% 以及 80%、60%、50% 等相似案例。
+- 已优化相似检索页面排版：查询图片预览改为紧凑信息卡，结果区域改为四列紧凑网格，减少左侧空白和纵向滚动。
+- 已运行 `.venv\Scripts\python.exe -m pytest tests -q`，结果为 13 passed；直接运行全量 pytest 会扫描已忽略交付包中的复制测试，可能出现同名模块收集冲突。
 - 已根据 `5c26f2b31b174502601e10d5e79ea072.mp4` 演示视频改造前端界面，覆盖首页、图像识别、相似搜索、智能搜索、智能问答、图片理解、历史记录和知识测试视图。
 - 用户反馈原前端“HTML 写法太老、AI 味太重”后，已将前端改为 Vue 3 驱动的单页应用；为了避免引入 npm 构建流程，当前使用本地 `frontend/vendor/vue.global.prod.js` 运行时。
 - 已新增 `/media/<path>` 安全图片预览路由，只允许读取 `uploads`、`data/raw` 和 `data/processed` 下的图片，用于展示上传图、历史图和相似检索图。

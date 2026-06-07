@@ -161,7 +161,9 @@ createApp({
         const data = await requestJson('/api/similar-search', { method: 'POST', body: this.formDataFrom('similarInput') });
         const elapsed = Math.round(performance.now() - start);
         this.similarResults = data.data;
-        this.similarMessage = `返回 ${data.data.length} 条相似案例，用时 ${elapsed} ms。`;
+        this.similarMessage = data.data.length <= 1
+          ? `仅返回 ${data.data.length} 条相似结果，用时 ${elapsed} ms。当前索引中可能只有极少相似图片，建议确认 Qdrant 索引是否完整。`
+          : `返回 Top ${data.data.length} 条相似结果，用时 ${elapsed} ms。`;
       } catch (error) {
         this.similarMessage = error.message;
       }

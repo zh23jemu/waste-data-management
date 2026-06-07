@@ -179,7 +179,7 @@ def test_history_list_delete_and_clear(tmp_path: Path):
 
 
 def test_similarity_service_supports_qdrant_query_points(monkeypatch, tmp_path: Path):
-    """相似检索服务应兼容新版 qdrant-client 的 query_points 接口。"""
+    """相似检索服务应兼容新版 qdrant-client，并返回 Top-N 低阈值候选。"""
 
     class FakeClassifier:
         """用固定特征替代真实 ResNet50，避免单元测试依赖模型权重和深度学习环境。"""
@@ -198,28 +198,75 @@ def test_similarity_service_supports_qdrant_query_points(monkeypatch, tmp_path: 
     class FakeResponse:
         """模拟 query_points 的响应结构，新版客户端命中结果位于 points 字段。"""
 
-        points = [FakeHit("hit-1", 0.92)]
+        points = [FakeHit("hit-low", 0.52), FakeHit("hit-exact", 1.0)]
 
     class FakeClient:
-        """记录调用参数，确认服务端阈值过滤和 payload 返回选项被正确传入。"""
+        """记录调用参数，确认 Top-N 数量和低阈值检索参数被正确传入。"""
 
         def query_points(self, **kwargs):
             assert kwargs["collection_name"] == "waste_images"
             assert kwargs["query"] == [0.1, 0.2, 0.3]
-            assert kwargs["limit"] == 5
+            assert kwargs["limit"] == 8
             assert kwargs["with_payload"] is True
-            assert kwargs["score_threshold"] == 0.65
+            assert kwargs["score_threshold"] == 0.0
             return FakeResponse()
 
-    service = SimilarityService(FakeClassifier(), "http://localhost:63330", "waste_images", 0.65)
+    service = SimilarityService(FakeClassifier(), "http://localhost:63330", "waste_images", 0.0, 8)
     monkeypatch.setattr(service, "_client", lambda: FakeClient())
 
     results = service.search(tmp_path / "battery.jpg")
 
     assert results == [
         {
-            "id": "hit-1",
-            "score": 0.92,
+            "id": "hit-exact",
+            "rank": 1,
+            "score": 1.0,
+            "is_exact_match": True,
             "payload": {"image_path": "data/raw/hazardous/battery__battery1.jpg"},
-        }
+        },
+        {
+            "id": "hit-low",
+            "rank": 2,
+            "score": 0.52,
+            "is_exact_match": False,
+            "payload": {"image_path": "data/raw/hazardous/battery__battery1.jpg"},
+        },
     ]
+
+
+def test_similarity_service_supports_legacy_qdrant_search(monkeypatch, tmp_path: Path):
+    """旧版 qdrant-client 只有 search 接口时，也应返回排序后的 Top-N 结果。"""
+
+    class FakeClassifier:
+        """用固定特征替代真实 ResNet50，避免测试依赖模型文件。"""
+
+        def extract_feature(self, image_path: Path) -> list[float]:
+            return [0.4, 0.5, 0.6]
+
+    class FakeHit:
+        """模拟旧版 search 接口返回的命中对象。"""
+
+        def __init__(self, point_id: str, score: float):
+            self.id = point_id
+            self.score = score
+            self.payload = {"filename": f"{point_id}.jpg"}
+
+    class FakeClient:
+        """只提供旧版 search 方法，验证兜底路径仍然可用。"""
+
+        def search(self, **kwargs):
+            assert kwargs["collection_name"] == "waste_images"
+            assert kwargs["query_vector"] == [0.4, 0.5, 0.6]
+            assert kwargs["limit"] == 8
+            assert kwargs["score_threshold"] == 0.0
+            assert kwargs["with_payload"] is True
+            return [FakeHit("mid", 0.6), FakeHit("high", 0.8)]
+
+    service = SimilarityService(FakeClassifier(), "http://localhost:63330", "waste_images", 0.0, 8)
+    monkeypatch.setattr(service, "_client", lambda: FakeClient())
+
+    results = service.search(tmp_path / "bottle.jpg")
+
+    assert [item["id"] for item in results] == ["high", "mid"]
+    assert [item["rank"] for item in results] == [1, 2]
+    assert all(item["is_exact_match"] is False for item in results)

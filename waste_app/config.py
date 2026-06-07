@@ -29,7 +29,9 @@ class Config:
 
     QDRANT_URL = os.getenv("QDRANT_URL", "http://localhost:6333")
     QDRANT_COLLECTION = os.getenv("QDRANT_COLLECTION", "waste_images")
-    SIMILARITY_THRESHOLD = float(os.getenv("SIMILARITY_THRESHOLD", "0.65"))
+    SIMILARITY_THRESHOLD = float(os.getenv("SIMILARITY_THRESHOLD", "0.0"))
+    SIMILARITY_LIMIT = int(os.getenv("SIMILARITY_LIMIT", "8"))
+    SIMILARITY_MIN_DISPLAY_SCORE = float(os.getenv("SIMILARITY_MIN_DISPLAY_SCORE", "0.3"))
 
     DEEPSEEK_API_KEY = os.getenv("DEEPSEEK_API_KEY", "")
     DEEPSEEK_BASE_URL = os.getenv("DEEPSEEK_BASE_URL", "https://api.deepseek.com/chat/completions")

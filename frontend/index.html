@@ -119,20 +119,32 @@
             <input ref="similarInput" type="file" accept="image/png,image/jpeg" required @change="previewFile('similar', $event)">
             <button type="submit" class="green">检索</button>
           </form>
-          <div class="analysis-layout">
-            <image-preview :src="similarPreview" text="未选择图片"></image-preview>
-            <div>
-              <div class="notice-box">{{ similarMessage }}</div>
-              <div class="similar-grid">
-                <article v-for="item in similarResults" :key="item.id" class="similar-card">
-                  <img :src="mediaUrl(item.payload && item.payload.image_path)" :alt="item.payload && item.payload.filename">
-                  <div>
-                    <strong>{{ item.payload && item.payload.filename || '参考图片' }}</strong>
-                    <span>类别：{{ labelOf(item.payload && item.payload.category) }}</span>
-                    <span>相似度：{{ percent(item.score) }}</span>
-                  </div>
-                </article>
+          <div class="similar-layout">
+            <div class="similar-query-card">
+              <image-preview :src="similarPreview" text="未选择查询图片"></image-preview>
+              <div>
+                <strong>查询图片</strong>
+                <span>{{ similarPreview ? '已选择图片，将提取 ResNet50 特征检索 Qdrant。' : '选择图片后可查看 Top-N 相似案例。' }}</span>
               </div>
+            </div>
+            <div class="notice-box similar-notice">{{ similarMessage }}</div>
+            <div class="similar-grid">
+              <article v-for="item in similarResults" :key="item.id" class="similar-card">
+                <span class="similar-rank">#{{ item.rank }}</span>
+                <img :src="mediaUrl(item.payload && item.payload.image_path)" :alt="item.payload && item.payload.filename">
+                <div class="similar-body">
+                  <div class="similar-title">
+                    <strong>{{ item.payload && item.payload.filename || '参考图片' }}</strong>
+                    <em :class="{ exact: item.is_exact_match }">{{ item.is_exact_match ? '原图或高度一致' : '相似案例' }}</em>
+                  </div>
+                  <span>类别：{{ labelOf(item.payload && item.payload.category) }}</span>
+                  <div class="similar-score">
+                    <span>相似度</span>
+                    <div class="bar"><i :style="{ width: Math.max(2, item.score * 100) + '%' }"></i></div>
+                    <strong>{{ percent(item.score) }}</strong>
+                  </div>
+                </div>
+              </article>
             </div>
           </div>
         </module-card>

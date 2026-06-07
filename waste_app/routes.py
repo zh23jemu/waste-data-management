@@ -64,6 +64,8 @@ def api_config():
         "max_upload_mb": current_app.config["MAX_CONTENT_LENGTH"] // 1024 // 1024,
         "allowed_extensions": sorted(current_app.config["ALLOWED_EXTENSIONS"]),
         "similarity_threshold": current_app.config["SIMILARITY_THRESHOLD"],
+        "similarity_limit": current_app.config["SIMILARITY_LIMIT"],
+        "similarity_min_display_score": current_app.config["SIMILARITY_MIN_DISPLAY_SCORE"],
     })
 
 
@@ -97,6 +99,7 @@ def similar_search():
             current_app.config["QDRANT_URL"],
             current_app.config["QDRANT_COLLECTION"],
             current_app.config["SIMILARITY_THRESHOLD"],
+            current_app.config["SIMILARITY_LIMIT"],
         )
         return jsonify({"ok": True, "data": service.search(image_path)})
     except (ModelNotReadyError, SimilaritySearchError) as exc:
